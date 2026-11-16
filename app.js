@@ -73,6 +73,8 @@
     elements.bookingTitleInput = document.getElementById("booking-title");
     elements.bookingAttendeesInput = document.getElementById("booking-attendees");
     elements.bookerPinInput = document.getElementById("booker-pin");
+    elements.bookingEmailInvite = document.getElementById("booking-email-invite");
+    elements.btnResendEmailInvite = document.getElementById("btn-resend-email-invite");
     elements.bookingSubmitBtn = document.getElementById("booking-submit-btn");
 
     // Live Availability Preview
@@ -1379,7 +1381,10 @@
 
     const targetRoomId = (elements.bookingRoom && elements.bookingRoom.value) || state.selectedRoomId || "qeh-seminar-room";
 
+    const sendEmailInvite = elements.bookingEmailInvite ? elements.bookingEmailInvite.checked : true;
+
     const bookingPayload = {
+      sendEmailInvite: sendEmailInvite,
       roomId: targetRoomId,
       date: date,
       startTime: startTime,
@@ -2211,6 +2216,26 @@
     elements.bookingForm.onsubmit = handleBookingFormSubmit;
 
     // Details actions
+        if (elements.btnResendEmailInvite) {
+      elements.btnResendEmailInvite.onclick = async () => {
+        if (!activeDetailsBooking || !activeDetailsBooking.email) {
+          alert("No email address found for this booking.");
+          return;
+        }
+        elements.btnResendEmailInvite.disabled = true;
+        elements.btnResendEmailInvite.textContent = "⏳ Sending...";
+        try {
+          const res = await window.SyncEngine.sendCalendarInviteEmail(activeDetailsBooking);
+          alert(✅ Calendar invitation successfully emailed to ${activeDetailsBooking.email}!);
+        } catch (err) {
+          alert("Notice: Could not send email invite: " + err.message);
+        } finally {
+          elements.btnResendEmailInvite.disabled = false;
+          elements.btnResendEmailInvite.textContent = "📧 Email Invite";
+        }
+      };
+    }
+
     elements.btnOutlookInvite.onclick = () => {
       if (activeDetailsBooking) window.SyncEngine.generateICS(activeDetailsBooking);
     };
