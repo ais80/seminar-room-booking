@@ -791,7 +791,7 @@
         item.className = "agenda-booking-item";
         item.innerHTML = `
           <div>
-            <div style="font-weight:700; color:var(--nhs-dark-blue); font-size:0.92rem;">
+            <div style="font-weight:700; color:var(--text-nhs-dark); font-size:0.92rem;">
               ${b.isBlocked ? '🔒 ' : ''}${b.title}
             </div>
             <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem;">
@@ -799,7 +799,7 @@
             </div>
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:700; font-size:0.88rem; color:var(--nhs-blue);">
+            <div style="font-weight:700; font-size:0.88rem; color:var(--text-nhs-blue);">
               ${b.startTime} - ${b.endTime}
             </div>
             <div style="font-size:0.72rem; color:var(--text-light);">
@@ -1005,7 +1005,7 @@
       const header = document.createElement("div");
       header.className = "admin-site-group-header";
       header.innerHTML = `
-        <div style="font-weight:700; color:var(--nhs-dark-blue); font-size:0.9rem;">
+        <div style="font-weight:700; color:var(--text-nhs-dark); font-size:0.9rem;">
           🏥 ${siteName} (${siteRooms.length} room${siteRooms.length === 1 ? '' : 's'})
         </div>
         <button class="btn-secondary btn-sm" type="button" style="font-size:0.75rem; padding:0.2rem 0.5rem;" onclick="window.prepareAddRoomForSite('${siteName}')">
@@ -1035,7 +1035,7 @@
           card.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div>
-                <strong style="color:var(--nhs-dark-blue); font-size:0.92rem;">${r.name}</strong>
+                <strong style="color:var(--text-nhs-dark); font-size:0.92rem;">${r.name}</strong>
                 ${r.isDefault ? '<span class="default-room-badge">⭐ Core Seminar Room</span>' : ''}
                 <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
                   📍 ${r.location || 'Pharmacy Department'} • 👥 Max Capacity: <strong>${r.capacity}</strong>
@@ -1704,7 +1704,7 @@
 
     elements.detailsBody.innerHTML = `
       <div style="background:var(--bg-surface-subtle); padding:1rem; border-radius:var(--radius-sm); border-left:4px solid var(--nhs-blue);">
-        <h4 style="margin:0; font-size:1.1rem; color:var(--nhs-dark-blue);">${booking.title}</h4>
+        <h4 style="margin:0; font-size:1.1rem; color:var(--text-nhs-dark);">${booking.title}</h4>
         <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">
           📅 <strong>${booking.date}</strong> &nbsp;•&nbsp; 🕒 <strong>${booking.startTime} - ${booking.endTime}</strong> (${booking.durationMinutes} mins)
         </div>
@@ -1721,7 +1721,7 @@
         </div>
         <div>
           <span style="color:var(--text-muted);">NHS Email:</span><br>
-          <a href="mailto:${booking.email}" style="color:var(--nhs-blue);">${booking.email}</a>
+          <a href="mailto:${booking.email}" style="color:var(--text-nhs-blue);">${booking.email}</a>
         </div>
         <div>
           <span style="color:var(--text-muted);">Contact Bleep / Ext:</span><br>
@@ -2105,7 +2105,7 @@
       }
     } catch (err) {
       console.warn("QR generation fallback:", err);
-      elements.doorQrContainer.innerHTML = `<div style="padding:1rem; color:#005EB8; font-size:0.85rem;"><strong>${targetUrl}</strong></div>`;
+      elements.doorQrContainer.innerHTML = `<div style="padding:1rem; color:var(--text-nhs-blue); font-size:0.85rem;"><strong>${targetUrl}</strong></div>`;
     }
   }
 
@@ -2574,7 +2574,7 @@
     if (elements.btnTestSupabase) {
       elements.btnTestSupabase.onclick = async () => {
         elements.supabaseTestStatus.textContent = "Testing connection...";
-        elements.supabaseTestStatus.style.color = "var(--nhs-blue)";
+        elements.supabaseTestStatus.style.color = "var(--text-nhs-blue)";
         const url = elements.supabaseUrlInput.value.trim();
         const key = elements.supabaseAnonKeyInput.value.trim();
         const res = await window.SyncEngine.testSupabaseConnection(url, key);
