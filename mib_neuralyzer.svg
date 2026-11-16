@@ -1,0 +1,366 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 340" width="100%" height="100%">
+  <defs>
+    <!-- Background Sci-Fi Gradient -->
+    <radialGradient id="bg-glow" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="60%" stop-color="#090D16"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+
+    <!-- Chrome Metallic Shaft Gradient -->
+    <linearGradient id="chrome-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#64748B"/>
+      <stop offset="20%" stop-color="#CBD5E1"/>
+      <stop offset="45%" stop-color="#FFFFFF"/>
+      <stop offset="70%" stop-color="#94A3B8"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+
+    <!-- MIB Dark Suit Gradient -->
+    <linearGradient id="suit-left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#27272A"/>
+      <stop offset="50%" stop-color="#18181B"/>
+      <stop offset="100%" stop-color="#09090B"/>
+    </linearGradient>
+
+    <linearGradient id="suit-right" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#27272A"/>
+      <stop offset="50%" stop-color="#18181B"/>
+      <stop offset="100%" stop-color="#09090B"/>
+    </linearGradient>
+
+    <!-- Skin Tone Gradients -->
+    <linearGradient id="skin-male" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9A5B32"/>
+      <stop offset="60%" stop-color="#C68652"/>
+      <stop offset="100%" stop-color="#844822"/>
+    </linearGradient>
+
+    <linearGradient id="skin-female" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EAA67C"/>
+      <stop offset="50%" stop-color="#FFC59E"/>
+      <stop offset="100%" stop-color="#D98A5B"/>
+    </linearGradient>
+
+    <!-- Blinding Red Flash Blast Gradient -->
+    <radialGradient id="red-flash-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="18%" stop-color="#FFE4E6"/>
+      <stop offset="35%" stop-color="#FF0044"/>
+      <stop offset="65%" stop-color="#DC2626"/>
+      <stop offset="85%" stop-color="#991B1B"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+
+    <!-- Ambient Red Flash Overlay -->
+    <radialGradient id="red-ambient" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="rgba(255, 0, 68, 0.5)"/>
+      <stop offset="60%" stop-color="rgba(220, 38, 38, 0.25)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+
+    <filter id="red-glow-filter" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="flare-filter" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+
+    <style>
+      /* Neuralyzer Elevation Animation (Brought up toward screen) */
+      @keyframes bringUpNeuralyzer {
+        0%, 15% {
+          transform: translateY(115px) scale(0.72);
+        }
+        38% {
+          transform: translateY(-8px) scale(1.14);
+        }
+        44% {
+          transform: translateY(0px) scale(1.12);
+        }
+        82% {
+          transform: translateY(0px) scale(1.12);
+        }
+        94%, 100% {
+          transform: translateY(115px) scale(0.72);
+        }
+      }
+
+      /* Pop-up Top Section Slide */
+      @keyframes popUpTop {
+        0%, 28% {
+          transform: translateY(0px);
+        }
+        40%, 82% {
+          transform: translateY(-24px);
+        }
+        92%, 100% {
+          transform: translateY(0px);
+        }
+      }
+
+      /* Red Flash Blast Explosion */
+      @keyframes redFlashBlast {
+        0%, 42% {
+          opacity: 0;
+          transform: scale(0.05);
+        }
+        46% {
+          opacity: 1;
+          transform: scale(2.6);
+        }
+        52% {
+          opacity: 0.95;
+          transform: scale(3.4);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(3.1);
+        }
+        72% {
+          opacity: 0.85;
+          transform: scale(2.8);
+        }
+        84% {
+          opacity: 0;
+          transform: scale(1.2);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(0.05);
+        }
+      }
+
+      /* Red Ambient Light Reflection on Agents */
+      @keyframes redAmbientReflect {
+        0%, 42% {
+          opacity: 0;
+        }
+        46%, 76% {
+          opacity: 0.85;
+        }
+        85%, 100% {
+          opacity: 0;
+        }
+      }
+
+      /* Pulsing Red Core Diode */
+      @keyframes diodePulse {
+        0%, 36% {
+          fill: #7F1D1D;
+        }
+        42%, 82% {
+          fill: #FF0033;
+        }
+        90%, 100% {
+          fill: #7F1D1D;
+        }
+      }
+
+      .neuralyzer-unit {
+        transform-origin: 250px 320px;
+        animation: bringUpNeuralyzer 3.4s infinite cubic-bezier(0.2, 0.8, 0.25, 1);
+      }
+
+      .pop-cylinder {
+        animation: popUpTop 3.4s infinite ease-in-out;
+      }
+
+      .red-blast-group {
+        transform-origin: 250px 58px;
+        animation: redFlashBlast 3.4s infinite cubic-bezier(0.1, 0.9, 0.2, 1);
+      }
+
+      .ambient-flash-overlay {
+        animation: redAmbientReflect 3.4s infinite ease-in-out;
+      }
+
+      .emitter-diode {
+        animation: diodePulse 3.4s infinite;
+      }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="500" height="340" fill="url(#bg-glow)" rx="12"/>
+
+  <!-- Subtle High-Tech Blueprint Grid Lines -->
+  <g opacity="0.12" stroke="#38BDF8" stroke-width="0.8">
+    <line x1="50" y1="0" x2="50" y2="340"/>
+    <line x1="150" y1="0" x2="150" y2="340"/>
+    <line x1="250" y1="0" x2="250" y2="340"/>
+    <line x1="350" y1="0" x2="350" y2="340"/>
+    <line x1="450" y1="0" x2="450" y2="340"/>
+    <line x1="0" y1="80" x2="500" y2="80"/>
+    <line x1="0" y1="160" x2="500" y2="160"/>
+    <line x1="0" y1="240" x2="500" y2="240"/>
+  </g>
+
+  <!-- =========================================================================
+       MALE & FEMALE MIB AGENTS: STANDING BACK-TO-BACK
+       ========================================================================= -->
+  <g id="agents-back-to-back">
+
+    <!-- ========== LEFT AGENT: MALE AGENT (FACING LEFT, BACK TOWARD CENTER) ========== -->
+    <g id="male-agent">
+      <!-- Body & Suit Jacket -->
+      <path d="M 248 180 L 248 340 L 105 340 L 115 240 L 155 170 Z" fill="url(#suit-left)"/>
+      <path d="M 155 170 L 195 190 L 175 250 L 140 215 Z" fill="#18181B"/>
+
+      <!-- Left Shoulder / Arm Outward -->
+      <path d="M 115 240 L 85 340 L 125 340 L 140 260 Z" fill="#111827"/>
+
+      <!-- Crisp White Collar & Skinny Black Tie -->
+      <polygon points="175,155 205,175 185,190" fill="#FFFFFF"/>
+      <polygon points="195,170 215,175 200,192" fill="#E2E8F0"/>
+      <polygon points="188,185 198,185 202,270 186,270" fill="#09090B"/>
+
+      <!-- Lapel Highlight -->
+      <path d="M 165 172 L 190 230 L 180 235 L 158 175 Z" fill="#3F3F46" opacity="0.6"/>
+
+      <!-- Neck -->
+      <path d="M 180 135 L 205 135 L 200 165 L 175 160 Z" fill="url(#skin-male)"/>
+
+      <!-- Head & Jaw (Facing Left) -->
+      <path d="M 160 128 C 145 125, 142 110, 148 95 C 152 80, 168 70, 192 70 C 215 70, 228 82, 230 105 C 230 120, 222 135, 205 140 C 190 144, 175 140, 160 128 Z" fill="url(#skin-male)"/>
+
+      <!-- Male Ear -->
+      <ellipse cx="205" cy="108" rx="6" ry="9" fill="#9A5B32"/>
+
+      <!-- Hair: Sharp Dark Fade / Buzzcut -->
+      <path d="M 162 90 C 160 80, 172 66, 195 66 C 220 66, 232 75, 232 94 C 228 92, 220 85, 205 85 C 185 85, 172 88, 162 90 Z" fill="#09090B"/>
+
+      <!-- MIB Black Sunglasses (Angled Cool Glare) -->
+      <path d="M 150 96 L 195 93 L 198 108 L 158 112 Z" fill="#000000"/>
+      <!-- Sunglass Specular Reflection Streak -->
+      <polygon points="160,98 178,96 172,110 155,111" fill="#FFFFFF" opacity="0.8"/>
+      <line x1="195" y1="98" x2="204" y2="102" stroke="#000000" stroke-width="2.5"/>
+    </g>
+
+    <!-- ========== RIGHT AGENT: FEMALE AGENT (FACING RIGHT, BACK TOWARD CENTER) ========== -->
+    <g id="female-agent">
+      <!-- Body & Tailored Suit Jacket -->
+      <path d="M 252 180 L 252 340 L 395 340 L 385 240 L 345 170 Z" fill="url(#suit-right)"/>
+      <path d="M 345 170 L 305 190 L 325 250 L 360 215 Z" fill="#18181B"/>
+
+      <!-- Right Shoulder / Arm Outward -->
+      <path d="M 385 240 L 415 340 L 375 340 L 360 260 Z" fill="#111827"/>
+
+      <!-- Crisp White Collar & Slender Black Tie -->
+      <polygon points="325,155 295,175 315,190" fill="#FFFFFF"/>
+      <polygon points="305,170 285,175 300,192" fill="#E2E8F0"/>
+      <polygon points="312,185 302,185 298,270 314,270" fill="#09090B"/>
+
+      <!-- Lapel Highlight -->
+      <path d="M 335 172 L 310 230 L 320 235 L 342 175 Z" fill="#3F3F46" opacity="0.6"/>
+
+      <!-- Sleek Neck -->
+      <path d="M 320 135 L 295 135 L 300 165 L 325 160 Z" fill="url(#skin-female)"/>
+
+      <!-- Female Head & Sculpted Jaw (Facing Right) -->
+      <path d="M 340 128 C 355 125, 358 110, 352 95 C 348 80, 332 70, 308 70 C 285 70, 272 82, 270 105 C 270 120, 278 135, 295 140 C 310 144, 325 140, 340 128 Z" fill="url(#skin-female)"/>
+
+      <!-- Female Ear & Silver Stud -->
+      <ellipse cx="295" cy="108" rx="5" ry="8" fill="#D98A5B"/>
+      <circle cx="295" cy="113" r="1.5" fill="#E2E8F0"/>
+
+      <!-- Hair: Sleek High Ponytail & Bangs -->
+      <path d="M 338 90 C 340 80, 328 64, 305 64 C 280 64, 268 75, 268 96 C 272 93, 280 85, 295 85 C 315 85, 328 88, 338 90 Z" fill="#09090B"/>
+      <!-- Ponytail Arch Flowing Right -->
+      <path d="M 272 85 C 255 75, 245 95, 240 120 C 238 135, 248 145, 252 140 C 256 125, 258 100, 275 92 Z" fill="#09090B"/>
+
+      <!-- MIB Black Sunglasses (Chic Cat-Eye Angled Glare) -->
+      <path d="M 350 96 L 305 93 L 302 108 L 342 112 Z" fill="#000000"/>
+      <!-- Sunglass Specular Reflection Streak -->
+      <polygon points="340,98 322,96 328,110 345,111" fill="#FFFFFF" opacity="0.8"/>
+      <line x1="305" y1="98" x2="296" y2="102" stroke="#000000" stroke-width="2.5"/>
+    </g>
+
+    <!-- Center Seam Meeting Back-to-Back -->
+    <line x1="250" y1="180" x2="250" y2="340" stroke="#000000" stroke-width="4"/>
+  </g>
+
+  <!-- Ambient Red Flash Overlay on Agents -->
+  <rect width="500" height="340" fill="url(#red-ambient)" class="ambient-flash-overlay" pointer-events="none"/>
+
+  <!-- =========================================================================
+       THE NEURALYZER DEVICE (FOREGROUND: RISES UP TO SCREEN & FLASHES RED)
+       ========================================================================= -->
+  <g class="neuralyzer-unit">
+
+    <!-- Arm & Hand Holding Device (Center Foreground) -->
+    <g id="holding-hand">
+      <!-- Dark Sleeve Cuff -->
+      <path d="M 220 340 L 232 260 L 268 260 L 280 340 Z" fill="#09090B"/>
+      <line x1="230" y1="262" x2="270" y2="262" stroke="#FFFFFF" stroke-width="3"/>
+      <!-- Hand & Fingers Gripping Metallic Shaft -->
+      <rect x="236" y="225" width="28" height="38" rx="7" fill="#C68652"/>
+      <rect x="234" y="232" width="10" height="7" rx="3" fill="#EAA67C"/>
+      <rect x="234" y="241" width="10" height="7" rx="3" fill="#EAA67C"/>
+      <rect x="234" y="250" width="10" height="7" rx="3" fill="#EAA67C"/>
+    </g>
+
+    <!-- Main Chrome Metallic Cylindrical Shaft -->
+    <rect x="243" y="115" width="14" height="120" rx="4" fill="url(#chrome-grad)" stroke="#475569" stroke-width="1"/>
+    
+    <!-- Ribbed Finger Grips & Mechanical Dials -->
+    <line x1="243" y1="145" x2="257" y2="145" stroke="#1E293B" stroke-width="1.8"/>
+    <line x1="243" y1="152" x2="257" y2="152" stroke="#1E293B" stroke-width="1.8"/>
+    <line x1="243" y1="159" x2="257" y2="159" stroke="#1E293B" stroke-width="1.8"/>
+    
+    <!-- Year/Month/Day Setting Knurled Wheels -->
+    <rect x="244" y="172" width="12" height="6" fill="#334155"/>
+    <rect x="244" y="182" width="12" height="6" fill="#334155"/>
+    <circle cx="250" cy="202" r="2" fill="#22C55E"/>
+
+    <!-- =======================================================================
+         POP-UP TOP SECTION (SLIDES UP OUT OF SHAFT)
+         ======================================================================= -->
+    <g class="pop-cylinder">
+      <!-- Upper Inner Chrome Shaft -->
+      <rect x="244" y="80" width="12" height="38" rx="2" fill="url(#chrome-grad)" stroke="#64748B" stroke-width="0.8"/>
+      
+      <!-- Time Adjustment Dial Slits -->
+      <line x1="245" y1="92" x2="255" y2="92" stroke="#334155" stroke-width="1.2"/>
+      <line x1="245" y1="98" x2="255" y2="98" stroke="#334155" stroke-width="1.2"/>
+      <line x1="245" y1="104" x2="255" y2="104" stroke="#334155" stroke-width="1.2"/>
+
+      <!-- Emitter Tip Fixture -->
+      <rect x="246" y="68" width="8" height="14" rx="1.5" fill="#94A3B8"/>
+
+      <!-- Red Flash Emitter Diode (Bulb) -->
+      <circle cx="250" cy="65" r="4.5" class="emitter-diode" stroke="#FF0044" stroke-width="1"/>
+      <circle cx="248.5" cy="63.5" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+
+      <!-- =====================================================================
+           THE BLINDING RED FLASH BURST (FIRES OUTWARD TOWARDS THE VIEWER)
+           ===================================================================== -->
+      <g class="red-blast-group">
+        <!-- Giant Outer Soft Red Halo -->
+        <circle cx="250" cy="58" r="90" fill="url(#red-flash-core)" filter="url(#flare-filter)" opacity="0.85"/>
+        
+        <!-- Intense Radial Core Flare -->
+        <circle cx="250" cy="58" r="50" fill="url(#red-flash-core)" filter="url(#red-glow-filter)"/>
+        <circle cx="250" cy="58" r="22" fill="#FFFFFF" opacity="0.95"/>
+
+        <!-- Radiant High-Energy Starburst Laser Rays -->
+        <line x1="250" y1="-20" x2="250" y2="136" stroke="#FF0044" stroke-width="4.5" stroke-linecap="round" filter="url(#red-glow-filter)"/>
+        <line x1="172" y1="58" x2="328" y2="58" stroke="#FF0044" stroke-width="4.5" stroke-linecap="round" filter="url(#red-glow-filter)"/>
+        <line x1="195" y1="3" x2="305" y2="113" stroke="#FF2A6D" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="195" y1="113" x2="305" y2="3" stroke="#FF2A6D" stroke-width="3.5" stroke-linecap="round"/>
+
+        <!-- Secondary Blinding White Hot Center Spike -->
+        <line x1="250" y1="10" x2="250" y2="106" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+        <line x1="202" y1="58" x2="298" y2="58" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </g>
+
+  </g>
+</svg>
+
