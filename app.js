@@ -417,15 +417,27 @@
           contentCol.onclick = () => openDetailsModal(booking);
         }
       } else {
-        // Slot is Available
-        slotRow.classList.add("is-available");
-        contentCol.innerHTML = `
-          <div class="available-slot-card">
-            <span>? 30-Minute Slot Available � Click to Reserve</span>
-            <span class="badge-book-now">+ Book Slot</span>
-          </div>
-        `;
-        contentCol.onclick = () => openBookingModal(dateStr, timeStartStr);
+        const isPastSlot = isToday ? (slotEndMinutes <= nowMinutes) : (dateStr < getISODate(now));
+        if (isPastSlot) {
+          slotRow.classList.add("is-past");
+          contentCol.innerHTML = 
+            <div class="past-slot-card">
+              <span>⌛ Concluded Time Slot ( - )</span>
+            </div>
+          ;
+          contentCol.onclick = () => {
+            alert("This time slot has already concluded. Please choose an upcoming slot to book.");
+          };
+        } else {
+          slotRow.classList.add("is-available");
+          contentCol.innerHTML = 
+            <div class="available-slot-card">
+              <span>✨ 30-Minute Slot Available • Click to Reserve</span>
+              <span class="badge-book-now">+ Book Slot</span>
+            </div>
+          ;
+          contentCol.onclick = () => openBookingModal(dateStr, timeStartStr);
+        }
       }
 
       slotRow.appendChild(contentCol);
@@ -509,7 +521,16 @@
           });
           slotCell.onclick = () => openDetailsModal(bookingsAtTime[0]);
         } else {
-          slotCell.onclick = () => openBookingModal(dStr, timeStr);
+          const isPastCell = dStr < todayStr || (dStr === todayStr && (h + 1) * 60 <= nowMinutes);
+          if (isPastCell) {
+            slotCell.classList.add("is-past");
+            slotCell.title = "Past time slot (Concluded)";
+            slotCell.onclick = () => {
+              alert("Cannot book slots in the past. Please select an upcoming slot.");
+            };
+          } else {
+            slotCell.onclick = () => openBookingModal(dStr, timeStr);
+          }
         }
 
         grid.appendChild(slotCell);
@@ -1017,9 +1038,24 @@
       updateBookingRoomCapacityHint();
     }
 
-    const targetDate = dateStr || getISODate(state.selectedDate);
+    const todayStr = getISODate(new Date());
+    if (elements.bookingDateInput) {
+      elements.bookingDateInput.min = todayStr;
+    }
+
+    let targetDate = dateStr || getISODate(state.selectedDate);
+    if (targetDate < todayStr) {
+      targetDate = todayStr;
+    }
     elements.bookingDateInput.value = targetDate;
-    elements.bookingStartTimeInput.value = startTime || "09:00";
+
+    const now = new Date();
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    let chosenStartTime = startTime || "09:00";
+    if (targetDate === todayStr && window.SyncEngine.timeToMinutes(chosenStartTime) < nowMins) {
+      chosenStartTime = state.activeSlotStart || window.SyncEngine.minutesToTime(Math.ceil(nowMins / 30) * 30);
+    }
+    elements.bookingStartTimeInput.value = chosenStartTime;
     setBookingDuration(30);
 
     if (elements.recurrenceSummaryText) {
@@ -1116,12 +1152,12 @@
     const chosenEnd = window.SyncEngine.minutesToTime(window.SyncEngine.timeToMinutes(chosenStart) + chosenDuration);
     const targetRoomId = (elements.bookingRoom && elements.bookingRoom.value) || state.selectedRoomId || "qeh-seminar-room";
 
-    const conflict = window.SyncEngine.checkConflict(dateStr, chosenStart, chosenEnd, state.editingBookingId, targetRoomId);
+    const conflict = window.SyncEngine.checkConflict(dateStr, chosenStart, chosenEnd, state.editingBookingId, targetRoomId, window.SyncEngine.isAdmin);
     if (elements.checkerConflictMsg) {
       if (conflict.hasConflict) {
         elements.checkerConflictMsg.style.display = "block";
         elements.checkerConflictMsg.className = "checker-conflict-message has-conflict";
-        elements.checkerConflictMsg.innerHTML = `?? <strong>Time Conflict:</strong> ${conflict.message}`;
+        elements.checkerConflictMsg.innerHTML = conflict.isPast ? `⌛ <strong>Past Time:</strong> ${conflict.message}` : `⚠️ <strong>Time Conflict:</strong> ${conflict.message}`;
       } else {
         elements.checkerConflictMsg.style.display = "block";
         elements.checkerConflictMsg.className = "checker-conflict-message is-free";
@@ -1329,6 +1365,12 @@
       if (!proceed) return;
     }
 
+    // Prevent booking past slots
+    if (!window.SyncEngine.isAdmin && window.SyncEngine.isSlotInPast(date, startTime)) {
+      alert("⚠️ Cannot Book Past Slot:\n\nThe selected date and time has already passed. Please select an upcoming date and time.");
+      return;
+    }
+
     // Equipment
     const selectedEquipment = [];
     document.querySelectorAll('input[name="equipment"]:checked').forEach(cb => {
@@ -1414,7 +1456,7 @@
       }
 
       // Standard One-Off Booking
-      const newBooking = window.SyncEngine.addBooking(bookingPayload);
+      const newBooking = window.SyncEngine.addBooking(bookingPayload, window.SyncEngine.isAdmin);
       closeAllModals();
 
       // Prompt Outlook .ics download immediately
