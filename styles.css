@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    QE Pharmacy Seminar Room Booking System
    Design System & Modern NHS Healthcare Aesthetics
    ========================================================================== */
@@ -719,6 +719,35 @@ body {
 
 .slot-row.is-available:hover .badge-book-now {
   opacity: 1;
+}
+
+/* Slot State: Past / Concluded */
+.slot-row.is-past {
+  opacity: 0.55;
+}
+.slot-row.is-past .slot-time-col {
+  background: var(--bg-alt);
+  color: var(--text-muted);
+}
+.slot-row.is-past .slot-content-col {
+  background: var(--bg-alt);
+  cursor: not-allowed;
+}
+.past-slot-card {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.85rem;
+  color: var(--text-muted);
+  user-select: none;
+  font-size: 0.82rem;
+}
+.week-slot-cell.is-past {
+  background: var(--bg-alt);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.week-slot-cell.is-past:hover {
+  background: var(--border-subtle);
 }
 
 /* Slot State: Booked */
