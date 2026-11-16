@@ -491,6 +491,19 @@
       if (!b.site) b.site = "QEH Heritage";
       if (!b.roomName) b.roomName = "Seminar Room";
       if (!b.location) b.location = "Level 1, Pharmacy Department, Heritage Building";
+
+      // Auto-heal startTime and endTime if corrupted by spreadsheet date casting
+      if (!b.startTime || b.startTime === "1899-12-30" || !String(b.startTime).includes(":")) {
+        const m = String(b.id || "").match(/-(\d{2})(\d{2})$/);
+        if (m) {
+          b.startTime = `${m[1]}:${m[2]}`;
+        }
+      }
+      const dur = Number(b.durationMinutes) || 30;
+      b.durationMinutes = dur;
+      if (b.startTime && (!b.endTime || b.endTime === "1899-12-30" || !String(b.endTime).includes(":"))) {
+        b.endTime = this.minutesToTime(this.timeToMinutes(b.startTime) + dur);
+      }
       return b;
     }
 
@@ -1561,10 +1574,11 @@
         if (json.status === "success") {
           let bookingsChanged = false;
           if (Array.isArray(json.bookings)) {
+            const normalized = json.bookings.map(b => this.normalizeBooking(b));
             const oldStr = JSON.stringify(this.bookings);
-            const newStr = JSON.stringify(json.bookings);
+            const newStr = JSON.stringify(normalized);
             if (oldStr !== newStr) {
-              this.bookings = json.bookings;
+              this.bookings = normalized;
               localStorage.setItem(STORAGE_KEY, JSON.stringify(this.bookings));
               bookingsChanged = true;
             }
