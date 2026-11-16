@@ -1606,10 +1606,33 @@
         await fetch(cleanUrl, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "addBooking", booking: booking })
+          body: JSON.stringify({
+            action: "addBooking",
+            booking: booking,
+            sendEmailInvite: booking.sendEmailInvite !== false
+          })
         });
       } catch (err) {
         console.warn("Google Sheets push booking error:", err);
+      }
+    }
+
+    async sendCalendarInviteEmail(booking) {
+      if (!this.isGoogleSheetsConfigured() || !booking || !booking.email) {
+        return { success: false, error: "Missing recipient email or Google backend not configured." };
+      }
+      const cleanUrl = this.config.googleWebAppUrl.trim();
+      try {
+        const res = await fetch(cleanUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "sendInviteEmail", booking: booking })
+        });
+        const json = await res.json();
+        return json;
+      } catch (err) {
+        console.warn("Error sending calendar invite email:", err);
+        return { success: false, error: err.message };
       }
     }
 
