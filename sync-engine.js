@@ -1,4 +1,4 @@
-﻿/**
+/**
  * QE Pharmacy Seminar Room - Multi-Device Sync Engine
  * University Hospitals Birmingham NHS Foundation Trust
  * Handles LocalStorage caching, Multi-Tab Broadcast, Outlook .ics generation,
@@ -665,7 +665,27 @@
       return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
     }
 
-    checkConflict(date, startTime, endTime, excludeBookingId = null, roomId = null) {
+    isSlotInPast(date, startTime) {
+      if (!date) return false;
+      const now = new Date();
+      const todayStr = this.getLocalDateString(now);
+      if (date < todayStr) return true;
+      if (date > todayStr) return false;
+      if (!startTime) return false;
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const startMinutes = this.timeToMinutes(startTime);
+      return startMinutes < nowMinutes;
+    }
+
+    checkConflict(date, startTime, endTime, excludeBookingId = null, roomId = null, isSuperuser = false) {
+      if (!isSuperuser && this.isSlotInPast(date, startTime)) {
+        return {
+          hasConflict: true,
+          isPast: true,
+          message: "This date or time slot has already passed. Please select an upcoming slot."
+        };
+      }
+
       const reqStart = this.timeToMinutes(startTime);
       const reqEnd = this.timeToMinutes(endTime);
 
@@ -698,9 +718,9 @@
     }
 
     // Add New Booking
-    addBooking(bookingData) {
+    addBooking(bookingData, isSuperuser = false) {
       const roomId = bookingData.roomId || "qeh-seminar-room";
-      const conflict = this.checkConflict(bookingData.date, bookingData.startTime, bookingData.endTime, null, roomId);
+      const conflict = this.checkConflict(bookingData.date, bookingData.startTime, bookingData.endTime, null, roomId, isSuperuser);
       if (conflict.hasConflict) {
         throw new Error(conflict.message);
       }
@@ -751,7 +771,7 @@
       const newStart = updatedFields.startTime || existing.startTime;
       const newEnd = updatedFields.endTime || existing.endTime;
 
-      const conflict = this.checkConflict(newDate, newStart, newEnd, id, targetRoomId);
+      const conflict = this.checkConflict(newDate, newStart, newEnd, id, targetRoomId, isSuperuser);
       if (conflict.hasConflict) {
         throw new Error(conflict.message);
       }
