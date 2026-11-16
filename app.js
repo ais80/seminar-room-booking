@@ -243,7 +243,7 @@
   function applyTheme() {
     document.documentElement.setAttribute("data-theme", state.isDarkMode ? "dark" : "light");
     if (elements.themeToggleBtn) {
-      elements.themeToggleBtn.innerHTML = state.isDarkMode ? "☀️ Light" : "🌙 Dark";
+      elements.themeToggleBtn.innerHTML = state.isDarkMode ? "?? Light" : "?? Dark";
     }
   }
 
@@ -272,18 +272,18 @@
     if (activeBooking) {
       elements.roomStatusHero.className = activeBooking.isBlocked ? "room-status-hero is-blocked" : "room-status-hero is-occupied";
       elements.roomStatusText.innerHTML = activeBooking.isBlocked 
-        ? `ðŸ›‘ ${room ? room.name.toUpperCase() : 'ROOM'} TEMPORARILY CLOSED (${room ? room.site : ''})` 
-        : `ðŸ”´ ${room ? room.name.toUpperCase() : 'ROOM'} OCCUPIED UNTIL ${activeBooking.endTime}`;
-      elements.roomStatusSub.textContent = `${activeBooking.title} â€¢ Booked by ${activeBooking.bookerName} (${activeBooking.department}) â€¢ ${roomLocation}`;
+        ? `🛑 ${room ? room.name.toUpperCase() : 'ROOM'} TEMPORARILY CLOSED (${room ? room.site : ''})` 
+        : `🔴 ${room ? room.name.toUpperCase() : 'ROOM'} OCCUPIED UNTIL ${activeBooking.endTime}`;
+      elements.roomStatusSub.textContent = `${activeBooking.title} • Booked by ${activeBooking.bookerName} (${activeBooking.department}) • ${roomLocation}`;
 
       const endMins = window.SyncEngine.timeToMinutes(activeBooking.endTime);
       const remainingMins = endMins - currentMins;
-      elements.roomStatusMeta.innerHTML = `â±ï¸ ${remainingMins} mins remaining in session â€¢ Next available slot at ${activeBooking.endTime}`;
-      elements.quickBookBtn.innerHTML = `âš¡ Book from ${activeBooking.endTime}`;
+      elements.roomStatusMeta.innerHTML = `⏱️ ${remainingMins} mins remaining in session • Next available slot at ${activeBooking.endTime}`;
+      elements.quickBookBtn.innerHTML = `⚡ Book from ${activeBooking.endTime}`;
       state.activeSlotStart = activeBooking.endTime;
     } else {
       elements.roomStatusHero.className = "room-status-hero";
-      elements.roomStatusText.innerHTML = `ðŸŸ¢ CURRENTLY AVAILABLE â€¢ ${roomLabel}`;
+      elements.roomStatusText.innerHTML = `🟢 CURRENTLY AVAILABLE • ${roomLabel}`;
 
       // Find next upcoming booking today
       const upcoming = todayBookings
@@ -292,12 +292,12 @@
 
       if (upcoming.length > 0) {
         const next = upcoming[0];
-        elements.roomStatusSub.textContent = `Free now at ${room ? room.site : 'site'} â€¢ Next session at ${next.startTime}: '${next.title}' (${next.bookerName})`;
+        elements.roomStatusSub.textContent = `Free now at ${room ? room.site : 'site'} • Next session at ${next.startTime}: '${next.title}' (${next.bookerName})`;
         const freeUntilMins = window.SyncEngine.timeToMinutes(next.startTime) - currentMins;
-        elements.roomStatusMeta.innerHTML = `âœ… Free for the next ${freeUntilMins} mins (Max Capacity: ${roomCapacity} people)`;
+        elements.roomStatusMeta.innerHTML = `✅ Free for the next ${freeUntilMins} mins (Max Capacity: ${roomCapacity} people)`;
       } else {
-        elements.roomStatusSub.textContent = `Free for the rest of today â€¢ ${roomLocation} â€¢ Ready for use.`;
-        elements.roomStatusMeta.innerHTML = `âœ… Free to book immediately (Max Capacity: ${roomCapacity} people)`;
+        elements.roomStatusSub.textContent = `Free for the rest of today • ${roomLocation} • Ready for use.`;
+        elements.roomStatusMeta.innerHTML = `✅ Free to book immediately (Max Capacity: ${roomCapacity} people)`;
       }
 
       // Round current time to nearest current or next 30-min block for quick booking
@@ -310,7 +310,7 @@
         qMin = 0;
       }
       const qTimeStr = `${String(qHour).padStart(2, "0")}:${String(qMin).padStart(2, "0")}`;
-      elements.quickBookBtn.innerHTML = `âš¡ Quick Book 30 Mins (${qTimeStr})`;
+      elements.quickBookBtn.innerHTML = `⚡ Quick Book 30 Mins (${qTimeStr})`;
       state.activeSlotStart = qTimeStr;
     }
   }
@@ -384,7 +384,7 @@
           slotRow.classList.add("is-blocked");
           contentCol.innerHTML = `
             <div class="blocked-card">
-              <span>🛑</span>
+              <span>??</span>
               <div>
                 <strong>${booking.title}</strong>
                 <div style="font-size:0.72rem; opacity:0.85;">Scheduled by Directorate Admin</div>
@@ -402,14 +402,14 @@
                   <span class="tag-department">${booking.department}</span>
                 </div>
                 <div class="booked-meta">
-                  <span>👤 <strong>${booking.bookerName}</strong> (${booking.bleep})</span>
-                  <span>👥 ${booking.attendees} attendees</span>
-                  <span>🕒 ${booking.startTime} - ${booking.endTime} (${booking.durationMinutes}m)</span>
+                  <span>?? <strong>${booking.bookerName}</strong> (${booking.bleep})</span>
+                  <span>?? ${booking.attendees} attendees</span>
+                  <span>?? ${booking.startTime} - ${booking.endTime} (${booking.durationMinutes}m)</span>
                 </div>
               </div>
               <div class="booked-actions-quick">
                 <button class="btn-slot-action" title="Add to Outlook Calendar" onclick="event.stopPropagation(); window.SyncEngine.generateICS(window.currentClickedBooking = ${JSON.stringify(booking).replace(/"/g, '&quot;')})">
-                  📅 Outlook
+                  ?? Outlook
                 </button>
               </div>
             </div>
@@ -421,7 +421,7 @@
         slotRow.classList.add("is-available");
         contentCol.innerHTML = `
           <div class="available-slot-card">
-            <span>✅ 30-Minute Slot Available • Click to Reserve</span>
+            <span>? 30-Minute Slot Available � Click to Reserve</span>
             <span class="badge-book-now">+ Book Slot</span>
           </div>
         `;
@@ -552,7 +552,7 @@
       const header = document.createElement("div");
       header.className = "agenda-day-header";
       header.innerHTML = `
-        <span>📅 ${dateTitle}</span>
+        <span>?? ${dateTitle}</span>
         <span style="font-size:0.75rem; font-weight:600; opacity:0.8;">${grouped[dateStr].length} session(s)</span>
       `;
       groupCard.appendChild(header);
@@ -563,10 +563,10 @@
         item.innerHTML = `
           <div>
             <div style="font-weight:700; color:var(--nhs-dark-blue); font-size:0.92rem;">
-              ${b.isBlocked ? '🛑 ' : ''}${b.title}
+              ${b.isBlocked ? '?? ' : ''}${b.title}
             </div>
             <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem;">
-              👤 ${b.bookerName} (${b.department}) • 📞 ${b.bleep} • 👥 ${b.attendees} attendees
+              ?? ${b.bookerName} (${b.department}) � ?? ${b.bleep} � ?? ${b.attendees} attendees
             </div>
           </div>
           <div style="text-align:right;">
@@ -616,7 +616,7 @@
     const isAdmin = window.SyncEngine.isAdmin;
     elements.adminActiveBar.style.display = isAdmin ? "flex" : "none";
     elements.adminToggleBtn.classList.toggle("admin-active", isAdmin);
-    elements.adminToggleBtn.innerHTML = isAdmin ? "🛡️ Superuser Active" : "🔐 Admin";
+    elements.adminToggleBtn.innerHTML = isAdmin ? "??? Superuser Active" : "?? Admin";
   }
 
   // Booking Modal Logic
@@ -652,7 +652,7 @@
       siteRooms.forEach(r => {
         const opt = document.createElement("option");
         opt.value = r.id;
-        opt.textContent = `${r.name} (${r.location || 'Pharmacy'} â€¢ Cap: ${r.capacity})`;
+        opt.textContent = `${r.name} (${r.location || 'Pharmacy'} • Cap: ${r.capacity})`;
         if (r.id === state.selectedRoomId) opt.selected = true;
         elements.roomSelectDropdown.appendChild(opt);
       });
@@ -662,15 +662,15 @@
     const currentRoom = window.SyncEngine.getRoomById(state.selectedRoomId);
     if (currentRoom) {
       if (elements.roomMetaLocation) elements.roomMetaLocation.textContent = currentRoom.location || "Pharmacy Department";
-      if (elements.roomMetaCapacity) elements.roomMetaCapacity.textContent = `ðŸ‘¥ Max ${currentRoom.capacity} people`;
+      if (elements.roomMetaCapacity) elements.roomMetaCapacity.textContent = `👥 Max ${currentRoom.capacity} people`;
       if (elements.roomMetaFacilities) {
         const facilityMap = {
-          wall_display: "ðŸ“º AV Display",
-          owl_camera: "ðŸ¦‰ Teams Owl",
-          whiteboard: "ðŸ“‹ Whiteboard",
-          flipchart: "ðŸ“„ Flipchart",
-          polycom_phone: "ðŸ“ž Conf Phone",
-          pc_workstations: "ðŸ’» PCs"
+          wall_display: "📺 AV Display",
+          owl_camera: "🦉 Teams Owl",
+          whiteboard: "📋 Whiteboard",
+          flipchart: "📄 Flipchart",
+          polycom_phone: "📞 Conf Phone",
+          pc_workstations: "💻 PCs"
         };
         const eq = Array.isArray(currentRoom.equipment) && currentRoom.equipment.length > 0
           ? currentRoom.equipment.map(k => facilityMap[k] || k.replace(/_/g, " ")).join(", ")
@@ -682,7 +682,7 @@
     // 4. Quick add room button visibility for admin
     if (elements.btnAdminAddRoomQuick) {
       elements.btnAdminAddRoomQuick.style.display = window.SyncEngine.isAdmin ? "inline-block" : "none";
-      elements.btnAdminAddRoomQuick.textContent = `âž• Add Room to ${state.selectedSite}`;
+      elements.btnAdminAddRoomQuick.textContent = `➕ Add Room to ${state.selectedSite}`;
     }
   }
 
@@ -719,7 +719,7 @@
     rooms.forEach(r => {
       const opt = document.createElement("option");
       opt.value = r.id;
-      opt.textContent = `${r.name} (${r.location || 'Department'} â€¢ Cap: ${r.capacity})`;
+      opt.textContent = `${r.name} (${r.location || 'Department'} • Cap: ${r.capacity})`;
       if (selectedId && r.id === selectedId) opt.selected = true;
       selectEl.appendChild(opt);
     });
@@ -777,10 +777,10 @@
       header.className = "admin-site-group-header";
       header.innerHTML = `
         <div style="font-weight:700; color:var(--nhs-dark-blue); font-size:0.9rem;">
-          ðŸ¥ ${siteName} (${siteRooms.length} room${siteRooms.length === 1 ? '' : 's'})
+          🏥 ${siteName} (${siteRooms.length} room${siteRooms.length === 1 ? '' : 's'})
         </div>
         <button class="btn-secondary btn-sm" type="button" style="font-size:0.75rem; padding:0.2rem 0.5rem;" onclick="window.prepareAddRoomForSite('${siteName}')">
-          âž• Add Room to ${siteName}
+          ➕ Add Room to ${siteName}
         </button>
       `;
       siteGroup.appendChild(header);
@@ -807,18 +807,18 @@
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div>
                 <strong style="color:var(--nhs-dark-blue); font-size:0.92rem;">${r.name}</strong>
-                ${r.isDefault ? '<span class="default-room-badge">â­ Core Seminar Room</span>' : ''}
+                ${r.isDefault ? '<span class="default-room-badge">⭐ Core Seminar Room</span>' : ''}
                 <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
-                  ðŸ“ ${r.location || 'Pharmacy Department'} â€¢ ðŸ‘¥ Max Capacity: <strong>${r.capacity}</strong>
+                  📍 ${r.location || 'Pharmacy Department'} • 👥 Max Capacity: <strong>${r.capacity}</strong>
                 </div>
               </div>
               <div style="display:flex; gap:0.35rem;">
                 <button class="btn-secondary btn-sm" type="button" title="Edit room details" onclick="window.startEditRoom('${r.id}')" style="font-size:0.75rem; padding:0.25rem 0.5rem;">
-                  âœï¸ Edit
+                  ✏️ Edit
                 </button>
                 ${!r.isBuiltIn && r.id !== 'qeh-seminar-room' ? `
                   <button class="btn-secondary btn-sm" type="button" title="Delete room" onclick="window.deleteRoomAction('${r.id}')" style="font-size:0.75rem; padding:0.25rem 0.5rem; color:#DA291C;">
-                    ðŸ—‘ï¸ Delete
+                    🗑️ Delete
                   </button>
                 ` : ''}
               </div>
@@ -848,7 +848,7 @@
     if (!room) return;
 
     if (elements.editRoomId) elements.editRoomId.value = room.id;
-    if (elements.roomFormTitle) elements.roomFormTitle.textContent = `âœï¸ Edit Room: ${room.name} (${room.site})`;
+    if (elements.roomFormTitle) elements.roomFormTitle.textContent = `✏️ Edit Room: ${room.name} (${room.site})`;
     if (elements.roomFormSite) {
       elements.roomFormSite.value = room.site;
       elements.roomFormSite.disabled = (room.id === "qeh-seminar-room");
@@ -864,20 +864,20 @@
     });
 
     if (elements.btnCancelEditRoom) elements.btnCancelEditRoom.style.display = "inline-block";
-    if (elements.btnSaveRoomSubmit) elements.btnSaveRoomSubmit.textContent = "ðŸ’¾ Save Changes";
+    if (elements.btnSaveRoomSubmit) elements.btnSaveRoomSubmit.textContent = "💾 Save Changes";
     if (elements.roomFormName) elements.roomFormName.focus();
   };
 
   function cancelEditRoom() {
     if (elements.editRoomId) elements.editRoomId.value = "";
-    if (elements.roomFormTitle) elements.roomFormTitle.textContent = "âž• Add Additional Room";
+    if (elements.roomFormTitle) elements.roomFormTitle.textContent = "➕ Add Additional Room";
     if (elements.roomFormSite) {
       elements.roomFormSite.disabled = false;
       elements.roomFormSite.value = state.selectedSite;
     }
     if (elements.adminAddRoomForm) elements.adminAddRoomForm.reset();
     if (elements.btnCancelEditRoom) elements.btnCancelEditRoom.style.display = "none";
-    if (elements.btnSaveRoomSubmit) elements.btnSaveRoomSubmit.textContent = "âž• Add Room to Site";
+    if (elements.btnSaveRoomSubmit) elements.btnSaveRoomSubmit.textContent = "➕ Add Room to Site";
   }
 
   window.deleteRoomAction = function (roomId) {
@@ -900,9 +900,9 @@
       renderSiteRoomNavigator();
       updateRoomStatus();
       renderCurrentView();
-      alert(`âœ… Room '${room.name}' successfully deleted.`);
+      alert(`✅ Room '${room.name}' successfully deleted.`);
     } catch (err) {
-      alert("âš ï¸ Error: " + err.message);
+      alert("⚠️ Error: " + err.message);
     }
   };
 
@@ -937,7 +937,7 @@
           equipment: selectedEquipment,
           description: description
         });
-        alert(`âœ… Room '${name}' updated successfully!`);
+        alert(`✅ Room '${name}' updated successfully!`);
       } else {
         const created = window.SyncEngine.addRoom({
           name: name,
@@ -948,7 +948,7 @@
           equipment: selectedEquipment,
           description: description
         });
-        alert(`âœ… Room '${created.name}' successfully added to ${created.site}!`);
+        alert(`✅ Room '${created.name}' successfully added to ${created.site}!`);
         state.selectedSite = site;
         state.selectedRoomId = created.id;
       }
@@ -959,7 +959,7 @@
       updateRoomStatus();
       renderCurrentView();
     } catch (err) {
-      alert("âš ï¸ Error: " + err.message);
+      alert("⚠️ Error: " + err.message);
     }
   }
 
@@ -970,13 +970,13 @@
     if (!room) return;
 
     if (elements.doorSignTrustTitle) {
-      elements.doorSignTrustTitle.textContent = `University Hospitals Birmingham NHS Foundation Trust â€¢ ${room.site}`;
+      elements.doorSignTrustTitle.textContent = `University Hospitals Birmingham NHS Foundation Trust • ${room.site}`;
     }
     if (elements.doorSignRoomTitle) {
       elements.doorSignRoomTitle.textContent = room.fullName || room.name;
     }
     if (elements.doorSignRoomSubtitle) {
-      elements.doorSignRoomSubtitle.textContent = `${room.location || 'Pharmacy Department'} â€¢ ${room.site}`;
+      elements.doorSignRoomSubtitle.textContent = `${room.location || 'Pharmacy Department'} • ${room.site}`;
     }
     if (elements.doorSignEtiquetteList) {
       const facilityMap = {
@@ -1053,7 +1053,7 @@
     const d = new Date(parts[0], parts[1] - 1, parts[2]);
     const dayName = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
     if (elements.checkerHeaderTitle) {
-      elements.checkerHeaderTitle.textContent = `🕒 Room Availability for ${dayName}`;
+      elements.checkerHeaderTitle.textContent = `?? Room Availability for ${dayName}`;
     }
 
     // Get existing bookings for this date
@@ -1086,7 +1086,7 @@
         const pill = document.createElement("span");
         pill.className = "slot-pill booked";
         pill.title = `Booked (${booked.startTime} - ${booked.endTime}): ${booked.title} [${booked.bookerName}]`;
-        pill.textContent = `${slotStart} ✕ Booked`;
+        pill.textContent = `${slotStart} ? Booked`;
         elements.checkerSlotsGrid.appendChild(pill);
       } else {
         freeCount++;
@@ -1096,7 +1096,7 @@
         if (slotStart === selectedStart) {
           pill.classList.add("selected");
         }
-        pill.textContent = `${slotStart} ✓ Free`;
+        pill.textContent = `${slotStart} ? Free`;
         pill.title = `Click to choose ${slotStart} as start time`;
         pill.onclick = () => {
           elements.bookingStartTimeInput.value = slotStart;
@@ -1121,11 +1121,11 @@
       if (conflict.hasConflict) {
         elements.checkerConflictMsg.style.display = "block";
         elements.checkerConflictMsg.className = "checker-conflict-message has-conflict";
-        elements.checkerConflictMsg.innerHTML = `⚠️ <strong>Time Conflict:</strong> ${conflict.message}`;
+        elements.checkerConflictMsg.innerHTML = `?? <strong>Time Conflict:</strong> ${conflict.message}`;
       } else {
         elements.checkerConflictMsg.style.display = "block";
         elements.checkerConflictMsg.className = "checker-conflict-message is-free";
-        elements.checkerConflictMsg.innerHTML = `✅ <strong>Available:</strong> ${chosenStart} — ${chosenEnd} (${chosenDuration} mins) is currently free to book!`;
+        elements.checkerConflictMsg.innerHTML = `? <strong>Available:</strong> ${chosenStart} � ${chosenEnd} (${chosenDuration} mins) is currently free to book!`;
       }
     }
   }
@@ -1273,7 +1273,7 @@
     };
 
     if (elements.recurrenceSummaryText) {
-      elements.recurrenceSummaryText.innerHTML = `🔁 <strong>${summaryText}</strong> (${dates.length} sessions planned)`;
+      elements.recurrenceSummaryText.innerHTML = `?? <strong>${summaryText}</strong> (${dates.length} sessions planned)`;
     }
     elements.recurrenceModal.classList.remove("open");
     updateLiveAvailabilityPreview();
@@ -1380,14 +1380,14 @@
 
         if (conflictCheck.hasConflicts) {
           if (conflictCheck.freeDates.length === 0) {
-            alert(`⚠️ Cannot create recurring series:\nAll ${dates.length} requested sessions conflict with existing bookings.`);
+            alert(`?? Cannot create recurring series:\nAll ${dates.length} requested sessions conflict with existing bookings.`);
             return;
           }
 
-          const conflictLines = conflictCheck.conflicts.map(c => `• ${c.date}: ${c.message}`).slice(0, 5).join("\n");
+          const conflictLines = conflictCheck.conflicts.map(c => `� ${c.date}: ${c.message}`).slice(0, 5).join("\n");
           const moreText = conflictCheck.conflicts.length > 5 ? `\n...and ${conflictCheck.conflicts.length - 5} more` : "";
           const proceed = confirm(
-            `⚠️ Scheduling Conflict on ${conflictCheck.conflicts.length} of ${dates.length} sessions:\n\n` +
+            `?? Scheduling Conflict on ${conflictCheck.conflicts.length} of ${dates.length} sessions:\n\n` +
             `${conflictLines}${moreText}\n\n` +
             `Would you like to book the ${conflictCheck.freeDates.length} AVAILABLE sessions (skipping conflicting dates)?`
           );
@@ -1400,7 +1400,7 @@
         closeAllModals();
 
         const downloadIcs = confirm(
-          `✅ Recurring Booking Series Confirmed!\n\n` +
+          `? Recurring Booking Series Confirmed!\n\n` +
           `Series: ${state.recurrence.summary}\n` +
           `Total Sessions Booked: ${result.bookings.length}\n` +
           `Time: ${startTime} - ${endTime}\n\n` +
@@ -1419,7 +1419,7 @@
 
       // Prompt Outlook .ics download immediately
       const downloadIcs = confirm(
-        `✅ Seminar Room Booked Successfully!\n\n` +
+        `? Seminar Room Booked Successfully!\n\n` +
         `Date: ${newBooking.date}\n` +
         `Time: ${newBooking.startTime} - ${newBooking.endTime}\n` +
         `Booking Ref: ${newBooking.id}\n\n` +
@@ -1430,7 +1430,7 @@
       }
       renderCurrentView();
     } catch (err) {
-      alert("⚠️ Booking Error: " + err.message);
+      alert("?? Booking Error: " + err.message);
     }
   }
 
@@ -1445,7 +1445,7 @@
 
     const recurrenceBadge = booking.isRecurring
       ? `<div style="background:#EFF6FF; border:1px solid #BFDBFE; color:#1E40AF; padding:0.4rem 0.6rem; border-radius:4px; font-size:0.8rem; margin-top:0.5rem;">
-          🔁 <strong>Recurring Series:</strong> ${booking.recurrenceSummary || 'Periodic Session'} (Session ${booking.occurrenceIndex || 1} of ${booking.totalOccurrences || 1})
+          ?? <strong>Recurring Series:</strong> ${booking.recurrenceSummary || 'Periodic Session'} (Session ${booking.occurrenceIndex || 1} of ${booking.totalOccurrences || 1})
          </div>`
       : "";
 
@@ -1453,7 +1453,7 @@
       <div style="background:var(--bg-surface-subtle); padding:1rem; border-radius:var(--radius-sm); border-left:4px solid var(--nhs-blue);">
         <h4 style="margin:0; font-size:1.1rem; color:var(--nhs-dark-blue);">${booking.title}</h4>
         <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">
-          📅 <strong>${booking.date}</strong> &nbsp;•&nbsp; 🕒 <strong>${booking.startTime} - ${booking.endTime}</strong> (${booking.durationMinutes} mins)
+          ?? <strong>${booking.date}</strong> &nbsp;�&nbsp; ?? <strong>${booking.startTime} - ${booking.endTime}</strong> (${booking.durationMinutes} mins)
         </div>
         ${recurrenceBadge}
       </div>
@@ -1517,7 +1517,7 @@
 
   function refreshSoundButton() {
     if (elements.lockoutSoundBtn) {
-      elements.lockoutSoundBtn.textContent = soundEnabled() ? "🔊 Sound on" : "🔇 Sound off";
+      elements.lockoutSoundBtn.textContent = soundEnabled() ? "?? Sound on" : "?? Sound off";
     }
   }
 
@@ -1632,22 +1632,22 @@
     if (booking.isRecurring && booking.recurrenceGroupId) {
       const cancelAll = confirm(
         `This booking is part of a recurring series:\n"${booking.recurrenceSummary}"\n\n` +
-        `• Click OK to cancel the ENTIRE RECURRING SERIES (${booking.totalOccurrences || ''} sessions).\n` +
-        `• Click CANCEL to cancel ONLY THIS SINGLE SESSION on ${booking.date}.`
+        `� Click OK to cancel the ENTIRE RECURRING SERIES (${booking.totalOccurrences || ''} sessions).\n` +
+        `� Click CANCEL to cancel ONLY THIS SINGLE SESSION on ${booking.date}.`
       );
 
       try {
         if (cancelAll) {
           const count = window.SyncEngine.deleteRecurringSeries(booking.recurrenceGroupId, pin, isAdmin);
-          alert(`✅ Entire recurring series (${count} sessions) cancelled successfully.`);
+          alert(`? Entire recurring series (${count} sessions) cancelled successfully.`);
         } else {
           window.SyncEngine.deleteBooking(booking.id, pin, isAdmin);
-          alert(`✅ Single session on ${booking.date} cancelled successfully.`);
+          alert(`? Single session on ${booking.date} cancelled successfully.`);
         }
         closeAllModals();
         renderCurrentView();
       } catch (err) {
-        alert("⚠️ Error: " + err.message);
+        alert("?? Error: " + err.message);
       }
       return;
     }
@@ -1662,7 +1662,7 @@
       closeAllModals();
       renderCurrentView();
     } catch (err) {
-      alert("⚠️ Error: " + err.message);
+      alert("?? Error: " + err.message);
     }
   }
 
@@ -1791,7 +1791,7 @@
       } else {
         if (elements.cancelPinError) {
           elements.cancelPinError.style.display = "block";
-          elements.cancelPinError.textContent = "❌ Incorrect PIN (Attempt " + state.pinFailedAttempts + " of 3). Only the booker or Pharmacy Directorate Admin can modify this booking.";
+          elements.cancelPinError.textContent = "? Incorrect PIN (Attempt " + state.pinFailedAttempts + " of 3). Only the booker or Pharmacy Directorate Admin can modify this booking.";
         }
         if (elements.cancelSlotPin) {
           elements.cancelSlotPin.value = "";
@@ -1808,7 +1808,7 @@
       if (elements.mibAuthStatus) {
         elements.mibAuthStatus.style.display = "block";
         elements.mibAuthStatus.style.color = "#10B981";
-        elements.mibAuthStatus.textContent = "✅ Directorate Admin Authorization Confirmed. Releasing slot...";
+        elements.mibAuthStatus.textContent = "? Directorate Admin Authorization Confirmed. Releasing slot...";
       }
       setTimeout(() => {
         if (elements.mibModal) elements.mibModal.classList.remove("open");
@@ -1825,7 +1825,7 @@
       if (elements.mibAuthStatus) {
         elements.mibAuthStatus.style.display = "block";
         elements.mibAuthStatus.style.color = "#FF4444";
-        elements.mibAuthStatus.textContent = "❌ Invalid Directorate Admin Password. Access Denied.";
+        elements.mibAuthStatus.textContent = "? Invalid Directorate Admin Password. Access Denied.";
       }
       if (elements.mibAdminPassword) {
         elements.mibAdminPassword.value = "";
@@ -1877,11 +1877,11 @@
   function handleAdminLogin() {
     const pin = elements.adminPinInput.value.trim();
     if (window.SyncEngine.verifyAdminPin(pin)) {
-      alert("✅ Admin Superuser Mode Activated!\nYou can now edit, cancel, or block any room slot.");
+      alert("? Admin Superuser Mode Activated!\nYou can now edit, cancel, or block any room slot.");
       closeAllModals();
       renderCurrentView();
     } else {
-      alert("❌ Incorrect Admin PIN. Please check with the Pharmacy IT lead.");
+      alert("? Incorrect Admin PIN. Please check with the Pharmacy IT lead.");
     }
   }
 
@@ -1909,7 +1909,7 @@
     users.forEach(u => {
       const opt = document.createElement("option");
       opt.value = u.name;
-      opt.textContent = u.name + (u.department ? " — " + u.department : "") + (u.bleep ? " (" + u.bleep + ")" : "");
+      opt.textContent = u.name + (u.department ? " � " + u.department : "") + (u.bleep ? " (" + u.bleep + ")" : "");
       elements.staffSuggestions.appendChild(opt);
     });
   }
@@ -1935,7 +1935,7 @@
       // Do not auto-fill PIN for security - booker must enter their own secret PIN
       if (elements.staffMatchBadge) {
         elements.staffMatchBadge.style.display = "inline";
-        elements.staffMatchBadge.textContent = "✓ Recognized: " + matched.name + " (" + matched.department + ")";
+        elements.staffMatchBadge.textContent = "? Recognized: " + matched.name + " (" + matched.department + ")";
       }
     } else {
       if (elements.staffMatchBadge) elements.staffMatchBadge.style.display = "none";
@@ -1954,9 +1954,9 @@
     elements.adminAddUserForm.reset();
     if (elements.editUserId) elements.editUserId.value = "";
     if (elements.btnCancelEditUser) elements.btnCancelEditUser.style.display = "none";
-    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "➕ Save Staff Member";
+    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "? Save Staff Member";
     const title = document.getElementById("user-form-title");
-    if (title) title.textContent = "➕ Add Staff Member";
+    if (title) title.textContent = "? Add Staff Member";
   }
 
   function renderAdminUsersList(searchFilter = "") {
@@ -1993,12 +1993,12 @@
       tr.innerHTML = 
         '<td style="padding: 8px 10px; font-weight: 600;">' + (u.name || '') + '</td>' +
         '<td style="padding: 8px 10px; color: var(--text-muted); font-family: monospace;">' + (u.email || '') + '</td>' +
-        '<td style="padding: 8px 10px;">' + (u.bleep || '—') + '</td>' +
+        '<td style="padding: 8px 10px;">' + (u.bleep || '�') + '</td>' +
         '<td style="padding: 8px 10px;">' + (u.department || 'Clinical Pharmacy') + '</td>' +
         '<td style="padding: 8px 10px;">' + roleBadge + '</td>' +
         '<td style="padding: 8px 10px; text-align: center;">' +
-          '<button class="btn-secondary btn-sm btn-edit-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; margin-right: 4px;">✏️ Edit</button>' +
-          '<button class="btn-secondary btn-sm btn-delete-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; color: #dc2626;">🗑️</button>' +
+          '<button class="btn-secondary btn-sm btn-edit-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; margin-right: 4px;">?? Edit</button>' +
+          '<button class="btn-secondary btn-sm btn-delete-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; color: #dc2626;">???</button>' +
         '</td>';
       elements.adminUsersTableBody.appendChild(tr);
     });
@@ -2025,9 +2025,9 @@
     if (elements.userFormPin) elements.userFormPin.value = user.pin || "1234";
 
     if (elements.btnCancelEditUser) elements.btnCancelEditUser.style.display = "inline-block";
-    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "💾 Update Staff Member";
+    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "?? Update Staff Member";
     const title = document.getElementById("user-form-title");
-    if (title) title.textContent = "✏️ Edit Staff Member";
+    if (title) title.textContent = "?? Edit Staff Member";
   }
 
   function deleteStaffMember(userId) {
@@ -2226,7 +2226,7 @@
       elements.btnCopyDoorUrl.onclick = () => {
         const url = elements.doorQrUrlInput ? elements.doorQrUrlInput.value : window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-          alert("📋 Link copied to clipboard:\n" + url);
+          alert("?? Link copied to clipboard:\n" + url);
         }).catch(() => {
           prompt("Copy this URL for door sign / phone access:", url);
         });
@@ -2275,7 +2275,7 @@
         closeAllModals();
         renderCurrentView();
       } catch (err) {
-        alert("⚠️ Error: " + err.message);
+        alert("?? Error: " + err.message);
       }
     };
 
@@ -2301,10 +2301,10 @@
         const key = elements.supabaseAnonKeyInput.value.trim();
         const res = await window.SyncEngine.testSupabaseConnection(url, key);
         if (res.success) {
-          elements.supabaseTestStatus.textContent = "🟢 Connected! Found " + res.roomsCount + " rooms, " + res.usersCount + " staff, " + res.bookingsCount + " bookings.";
+          elements.supabaseTestStatus.textContent = "?? Connected! Found " + res.roomsCount + " rooms, " + res.usersCount + " staff, " + res.bookingsCount + " bookings.";
           elements.supabaseTestStatus.style.color = "#007f3b";
         } else {
-          elements.supabaseTestStatus.textContent = "🔴 " + res.error;
+          elements.supabaseTestStatus.textContent = "?? " + res.error;
           elements.supabaseTestStatus.style.color = "#da291c";
         }
       };
@@ -2321,7 +2321,7 @@
         cloudSyncUrl: restUrl
       });
 
-      alert("✅ Cloud database settings saved!\nReal-time synchronization is now active.");
+      alert("? Cloud database settings saved!\nReal-time synchronization is now active.");
       closeAllModals();
       updateSyncStatusBadge();
     };
@@ -2380,11 +2380,11 @@
               const csvText = XLSX.utils.sheet_to_csv(worksheet);
 
               const count = window.SyncEngine.importUsersFromCsv(csvText);
-              alert("✅ Successfully imported " + count + " staff members directly from '" + file.name + "' (Sheet: " + sheetName + ")!");
+              alert("? Successfully imported " + count + " staff members directly from '" + file.name + "' (Sheet: " + sheetName + ")!");
               renderAdminUsersList();
               updateStaffSuggestions();
             } catch (err) {
-              alert("⚠️ Excel Import Error: " + err.message);
+              alert("?? Excel Import Error: " + err.message);
             }
             elements.userCsvFileInput.value = "";
           };
@@ -2395,11 +2395,11 @@
           reader.onload = (evt) => {
             try {
               const count = window.SyncEngine.importUsersFromCsv(evt.target.result);
-              alert("✅ Successfully imported " + count + " staff members from '" + file.name + "'!");
+              alert("? Successfully imported " + count + " staff members from '" + file.name + "'!");
               renderAdminUsersList();
               updateStaffSuggestions();
             } catch (err) {
-              alert("⚠️ CSV Import Error: " + err.message);
+              alert("?? CSV Import Error: " + err.message);
             }
             elements.userCsvFileInput.value = "";
           };
@@ -2433,7 +2433,7 @@
           renderAdminUsersList();
           updateStaffSuggestions();
         } catch (err) {
-          alert("⚠️ Error: " + err.message);
+          alert("?? Error: " + err.message);
         }
       };
     }
@@ -2449,7 +2449,7 @@
           }
           deferredInstallPrompt = null;
         } else {
-          alert("To install this app on your phone:\n• iPhone (Safari): Tap the Share button, then 'Add to Home Screen'\n• Android (Chrome): Tap the menu (⋮), then 'Install app' or 'Add to Home screen'");
+          alert("To install this app on your phone:\n� iPhone (Safari): Tap the Share button, then 'Add to Home Screen'\n� Android (Chrome): Tap the menu (?), then 'Install app' or 'Add to Home screen'");
         }
       };
     }
