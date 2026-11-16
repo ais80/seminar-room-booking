@@ -1,0 +1,1347 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Queen Elizabeth Hospital Birmingham - Pharmacy Seminar Room Booking System. Reserve half-hour slots, multi-slot sessions, check live room availability, and download NHS Outlook calendar invites.">
+  <meta name="theme-color" content="#005EB8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="QE Seminar Room">
+  <title>QE Pharmacy Seminar Room Booking | NHS UHB</title>
+  
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=2.2">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23005EB8%22/><text y=%2265%22 font-size=%2250%22 font-family=%22sans-serif%22 font-weight=%22900%22 fill=%22white%22 text-anchor=%22middle%22 x=%2250%22>NHS</text></svg>">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       NHS Global Header
+       ========================================================================== -->
+  <header class="nhs-header" role="banner">
+    <div class="nhs-header-inner">
+      <div class="nhs-branding">
+        <div class="nhs-logo-badge" aria-label="NHS Logo">NHS</div>
+        <div class="nhs-title-group">
+          <h1>Pharmacy Seminar Room Booking</h1>
+          <p>Queen Elizabeth Hospital Birmingham • Level 1 Pharmacy</p>
+        </div>
+      </div>
+      <div class="nhs-header-actions">
+        <!-- Live Cloud Sync Status -->
+        <div id="sync-status-badge" class="sync-badge" title="Click to view or configure cloud database sync">
+          <span id="sync-dot" class="sync-dot"></span>
+          <span id="sync-text">Local & Network Mode</span>
+        </div>
+
+        <!-- Door Sign & QR Code Trigger -->
+        <button id="btn-install-pwa" class="btn-header" type="button" style="display:none; background:#007f3b; border-color:#007f3b; color:#FFFFFF; font-weight:700;" title="Install application on your device">
+          📲 Install App
+        </button>
+        <button id="print-door-sign-btn" class="btn-header" type="button" title="Print QR Code poster for the seminar room door">
+          📱 Door Sign & QR
+        </button>
+
+        <!-- Admin Superuser Toggle -->
+        <button id="admin-toggle-btn" class="btn-header" type="button" title="Superuser Login / Override Controls">
+          🔐 Admin
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="btn-header" type="button" title="Toggle Light / Dark Mode">
+          🌙 Dark
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       Main Workspace Content
+       ========================================================================== -->
+  <main class="app-container" role="main">
+
+    <!-- Admin Active Notification Bar (Visible only when superuser is logged in) -->
+    <div id="admin-active-bar" class="admin-bar-active" style="display: none;">
+      <div>
+        <strong>🛡️ Superuser Mode Active:</strong> You can edit or remove any slot across the department without user PINs.
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <button id="admin-manage-rooms-btn" class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.78rem; font-weight: 700; color: #005EB8; background: #FFFFFF;" type="button">
+          🏢 Manage Rooms & Sites
+        </button>
+        <button id="admin-manage-users-btn" class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.78rem; font-weight: 700; color: #005EB8; background: #FFFFFF;" type="button">
+          👥 Staff Directory
+        </button>
+        <button id="admin-block-btn" class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" type="button">
+          🛑 Maintenance Block
+        </button>
+        <button id="admin-export-btn" class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" type="button">
+          📊 Export CSV
+        </button>
+        <button id="admin-logout-btn" class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.78rem; color: #DA291C;" type="button">
+          Log Out Admin
+        </button>
+      </div>
+    </div>
+
+    <!-- Trust Hospital Site & Room Navigator Bar -->
+    <section class="site-room-navigator-card" aria-label="Trust Hospital Site and Room Selection">
+      <div class="site-selector-row">
+        <div class="site-selector-header">
+          <span class="site-selector-badge">🏥 Trust Hospital Site:</span>
+          <span class="site-selector-note">Select campus to view availability or book:</span>
+        </div>
+        <div id="site-tabs-container" class="site-tabs-group" role="tablist">
+          <button class="site-tab-pill active" type="button" data-site="QEH Heritage" role="tab">
+            <span class="site-tab-icon">🏥</span>
+            <span class="site-tab-name">QEH Heritage</span>
+            <span class="site-tab-count" id="count-qeh">1 room</span>
+          </button>
+          <button class="site-tab-pill" type="button" data-site="Good Hope" role="tab">
+            <span class="site-tab-icon">🏥</span>
+            <span class="site-tab-name">Good Hope</span>
+            <span class="site-tab-count" id="count-ghh">1 room</span>
+          </button>
+          <button class="site-tab-pill" type="button" data-site="Heartlands" role="tab">
+            <span class="site-tab-icon">🏥</span>
+            <span class="site-tab-name">Heartlands</span>
+            <span class="site-tab-count" id="count-bhh">1 room</span>
+          </button>
+          <button class="site-tab-pill" type="button" data-site="Solihull" role="tab">
+            <span class="site-tab-icon">🏥</span>
+            <span class="site-tab-name">Solihull</span>
+            <span class="site-tab-count" id="count-sol">1 room</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="room-selector-row">
+        <div class="room-selector-left">
+          <div class="room-select-group">
+            <label for="room-select-dropdown" class="room-select-label">
+              <span>🚪 Active Room:</span>
+            </label>
+            <select id="room-select-dropdown" class="room-select-dropdown" aria-label="Choose Room">
+              <!-- Dynamically populated with rooms for active site -->
+            </select>
+          </div>
+          <div id="room-meta-pill" class="room-meta-pill">
+            <span id="room-meta-location">Level 1, Pharmacy Department, Heritage Building</span>
+            <span class="meta-separator">•</span>
+            <span id="room-meta-capacity">👥 Max 16 people</span>
+            <span class="meta-separator">•</span>
+            <span id="room-meta-facilities">📺 AV Display, 🦉 Teams Owl, 📋 Whiteboard, 📄 Flipchart</span>
+          </div>
+        </div>
+
+        <div class="room-selector-right">
+          <button id="btn-admin-add-room-quick" class="btn-secondary btn-sm" type="button" title="Superuser: Add a new room to this site" style="display: none; white-space: nowrap; font-weight: 700; color: #005EB8; border-color: #005EB8; background: #FFFFFF;">
+            ➕ Add Room
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Room Status Hero Card -->
+    <section id="room-status-hero" class="room-status-hero" aria-label="Current Room Availability Status">
+      <div class="status-left">
+        <div class="status-indicator-ring">
+          <span class="pulse-bubble"></span>
+          <span>🚪</span>
+        </div>
+        <div class="status-details">
+          <h2 id="room-status-text">🟢 CURRENTLY AVAILABLE</h2>
+          <p id="room-status-sub">Free for the rest of today • All equipment ready for use.</p>
+          <div id="room-status-meta" class="status-meta-badge">
+            ✅ Free to book immediately (Max Capacity: 16 people)
+          </div>
+        </div>
+      </div>
+      <div class="status-actions">
+        <button id="btn-book-session" class="btn-primary" type="button" style="background:#005EB8; border-color:#005EB8;" title="Book a future session or repeat appointment">
+          📅 Book a Session / Slot
+        </button>
+        <button id="quick-book-btn" class="btn-secondary" type="button">
+          ⚡ Quick Book 30 Mins Now
+        </button>
+      </div>
+    </section>
+
+    <!-- Calendar Toolbar & Filtering -->
+    <section class="calendar-toolbar" aria-label="Calendar Navigation and Controls">
+      <!-- Date Navigator -->
+      <div class="date-nav-group">
+        <button id="btn-prev-date" class="btn-icon" type="button" aria-label="Previous Day" title="Previous Day">
+          ◀
+        </button>
+        <div id="date-display-title" class="date-display-title" title="Click to view today or pick a date">
+          Today
+        </div>
+        <button id="btn-next-date" class="btn-icon" type="button" aria-label="Next Day" title="Next Day">
+          ▶
+        </button>
+        <button id="btn-today" class="btn-today" type="button">
+          Today
+        </button>
+        <div class="date-picker-input-group" title="Jump to any date in the future">
+          <label for="calendar-date-input" class="sr-only">Choose Date:</label>
+          <input id="calendar-date-input" type="date" class="calendar-date-selector">
+        </div>
+        <input id="hidden-date-picker" type="date" style="display: none;">
+      </div>
+
+      <!-- View Tabs -->
+      <div class="view-tabs" role="tablist">
+        <button id="view-day-btn" class="tab-btn active" type="button" role="tab">
+          📅 Day Timeline
+        </button>
+        <button id="view-week-btn" class="tab-btn" type="button" role="tab">
+          📆 Week Grid
+        </button>
+        <button id="view-agenda-btn" class="tab-btn" type="button" role="tab">
+          📋 Agenda List
+        </button>
+      </div>
+
+      <!-- Specialty / Department Filter -->
+      <div class="filter-tools">
+        <label for="department-filter" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Team:</label>
+        <select id="department-filter" class="select-filter">
+          <option value="all">All Specialties / Teams</option>
+          <option value="Clinical Pharmacy">Clinical Pharmacy</option>
+          <option value="Dispensary">Dispensary</option>
+          <option value="Aseptics">Aseptics & Radiopharmacy</option>
+          <option value="Medicines Information">Medicines Information (MI)</option>
+          <option value="EPMA / Digital Health">EPMA / Digital Health</option>
+          <option value="Education & Training">Education & Training</option>
+          <option value="Directorate Management">Directorate Management</option>
+          <option value="Oncology & Chemo">Oncology & Chemotherapy</option>
+          <option value="Specialist Clinical">Specialist Clinical</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Views Container -->
+    <!-- 1. Day Timeline View -->
+    <section id="day-timeline-container" class="day-timeline-card">
+      <div class="timeline-header-info">
+        <span>🕒 Half-Hour Booking Slots (08:00 — 19:00)</span>
+        <span>Tap any green slot to reserve • Click booked slot to view or download Outlook invite</span>
+      </div>
+      <!-- Slots will be rendered here dynamically -->
+    </section>
+
+    <!-- 2. Week View -->
+    <section id="week-view-container" style="display: none;">
+      <!-- Week Grid will be rendered here dynamically -->
+    </section>
+
+    <!-- 3. Agenda View -->
+    <section id="agenda-view-container" class="agenda-container" style="display: none;">
+      <!-- Agenda list will be rendered here dynamically -->
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       Mobile Bottom Navigation Bar
+       ========================================================================== -->
+  <nav class="mobile-bottom-bar" aria-label="Mobile Navigation">
+    <button class="mobile-nav-item active" onclick="document.getElementById('view-day-btn').click()">
+      <span>📅</span>
+      <span>Timeline</span>
+    </button>
+    <button class="mobile-nav-item" onclick="document.getElementById('quick-book-btn').click()">
+      <span>⚡</span>
+      <span>Book Now</span>
+    </button>
+    <button class="mobile-nav-item" onclick="document.getElementById('view-agenda-btn').click()">
+      <span>📋</span>
+      <span>Agenda</span>
+    </button>
+    <button class="mobile-nav-item" onclick="document.getElementById('print-door-sign-btn').click()">
+      <span>📱</span>
+      <span>QR Sign</span>
+    </button>
+  </nav>
+
+  <!-- ==========================================================================
+       Modal 1: New / Edit Booking Form
+       ========================================================================== -->
+  <div id="booking-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="booking-modal-title">Book Pharmacy Seminar Room</h3>
+        <button class="modal-close" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="booking-form">
+        <div class="modal-body">
+          <!-- Live Room Availability for Selected Date -->
+          <div class="availability-slot-checker">
+            <div class="availability-checker-header">
+              <span id="checker-header-title">🕒 Room Availability for Selected Date</span>
+              <span id="checker-slot-count" class="badge-slot-count">Checking availability...</span>
+            </div>
+            <div id="checker-slots-grid" class="checker-slots-grid">
+              <!-- Dynamically rendered slots -->
+            </div>
+            <div id="checker-conflict-message" class="checker-conflict-message" style="display:none;"></div>
+          </div>
+
+          <!-- Hospital Site & Room Selector -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="booking-site">
+                <span>Trust Hospital Site <span class="required-star">*</span></span>
+              </label>
+              <select id="booking-site" class="form-select" required>
+                <option value="QEH Heritage">QEH Heritage</option>
+                <option value="Good Hope">Good Hope</option>
+                <option value="Heartlands">Heartlands</option>
+                <option value="Solihull">Solihull</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="booking-room">
+                <span>Room to Reserve <span class="required-star">*</span></span>
+                <span id="booking-room-cap-hint" class="helper-note">Cap: 16 people</span>
+              </label>
+              <select id="booking-room" class="form-select" required>
+                <!-- Populated dynamically based on chosen site -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Date and Start Time -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="booking-date">
+                <span>Date <span class="required-star">*</span></span>
+              </label>
+              <input id="booking-date" class="form-input" type="date" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="booking-start-time">
+                <span>Start Time <span class="required-star">*</span></span>
+              </label>
+              <select id="booking-start-time" class="form-select" required>
+                <option value="08:00">08:00</option>
+                <option value="08:30">08:30</option>
+                <option value="09:00">09:00</option>
+                <option value="09:30">09:30</option>
+                <option value="10:00">10:00</option>
+                <option value="10:30">10:30</option>
+                <option value="11:00">11:00</option>
+                <option value="11:30">11:30</option>
+                <option value="12:00">12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                <option value="17:30">17:30</option>
+                <option value="18:00">18:00</option>
+                <option value="18:30">18:30</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Duration Selector -->
+          <div class="form-group">
+            <label class="form-label">
+              <span>Duration <span class="required-star">*</span></span>
+              <span class="helper-note">Consecutive 30-min slots</span>
+            </label>
+            <input id="booking-duration" type="hidden" value="30">
+            <div class="duration-selector">
+              <button class="duration-btn active" type="button" data-duration="30">30 Mins (1 slot)</button>
+              <button class="duration-btn" type="button" data-duration="60">60 Mins (1 hr)</button>
+              <button class="duration-btn" type="button" data-duration="90">90 Mins (1.5 hrs)</button>
+              <button class="duration-btn" type="button" data-duration="120">120 Mins (2 hrs)</button>
+            </div>
+          </div>
+
+          <!-- Recurrence / Repeat Booking Selector (Outlook Style) -->
+          <div class="form-group recurrence-card">
+            <div class="recurrence-card-content">
+              <div>
+                <strong style="color:var(--nhs-dark-blue); font-size:0.92rem;">🔁 Appointment Recurrence</strong>
+                <div id="recurrence-summary-text" class="recurrence-summary-text">
+                  One-off booking (Does not repeat)
+                </div>
+              </div>
+              <button id="btn-open-recurrence-modal" type="button" class="btn-secondary btn-sm" style="white-space:nowrap;">
+                🔁 Recurrence (Outlook)...
+              </button>
+            </div>
+          </div>
+
+          <!-- Booker Name and Department -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="booker-name">
+                <span>Booker Full Name <span class="required-star">*</span></span>
+                <span id="staff-match-badge" class="helper-note" style="display:none; color:#007f3b; font-weight:700;">✓ Staff Match</span>
+              </label>
+              <input id="booker-name" class="form-input" type="text" placeholder="Type name to search staff list..." list="staff-suggestions" required autocomplete="off">
+              <datalist id="staff-suggestions">
+                <!-- Populated dynamically from users database -->
+              </datalist>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="booker-dept">
+                <span>Department / Specialty <span class="required-star">*</span></span>
+              </label>
+              <select id="booker-dept" class="form-select" required>
+                <option value="Clinical Pharmacy">Clinical Pharmacy</option>
+                <option value="Dispensary">Dispensary</option>
+                <option value="Aseptics">Aseptics & Radiopharmacy</option>
+                <option value="Medicines Information">Medicines Information (MI)</option>
+                <option value="EPMA / Digital Health">EPMA / Digital Health</option>
+                <option value="Education & Training">Education & Training</option>
+                <option value="Directorate Management">Directorate Management</option>
+                <option value="Oncology & Chemo">Oncology & Chemotherapy</option>
+                <option value="Specialist Clinical">Specialist Clinical</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- NHS Email and Bleep/Ext -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="booker-email">
+                <span>NHS Email <span class="required-star">*</span></span>
+                <span class="helper-note">@uhb.nhs.uk or @nhs.net</span>
+              </label>
+              <input id="booker-email" class="form-input" type="email" placeholder="name@uhb.nhs.uk" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="booker-bleep">
+                <span>Contact Bleep / Ext <span class="required-star">*</span></span>
+              </label>
+              <input id="booker-bleep" class="form-input" type="text" placeholder="e.g. Bleep 4120 or Ext 14892" required>
+            </div>
+          </div>
+
+          <!-- Meeting Title & Expected Attendees -->
+          <div class="form-row-2">
+            <div class="form-group" style="grid-column: span 1;">
+              <label class="form-label" for="booking-title">
+                <span>Meeting / Session Title <span class="required-star">*</span></span>
+              </label>
+              <input id="booking-title" class="form-input" type="text" placeholder="e.g. Clinical Handover / Journal Club" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="booking-attendees">
+                <span>Attendees (Max 16) <span class="required-star">*</span></span>
+              </label>
+              <input id="booking-attendees" class="form-input" type="number" min="1" max="20" value="6" required>
+            </div>
+          </div>
+
+          <!-- Facilities / Equipment Required -->
+          <div class="form-group">
+            <label class="form-label">
+              <span>Equipment / Facilities Needed</span>
+            </label>
+            <div class="equipment-grid">
+              <label class="checkbox-label">
+                <input type="checkbox" name="equipment" value="wall_display" checked>
+                <span>📺 Wall AV Display / Projector</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="equipment" value="owl_camera">
+                <span>🦉 Teams Owl 360° Hybrid Camera</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="equipment" value="whiteboard" checked>
+                <span>📋 Whiteboard & Dry Markers</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="equipment" value="flipchart">
+                <span>📄 Flipchart & Paper</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 4-Digit Security PIN -->
+          <div class="pin-input-box">
+            <div class="form-group">
+              <label class="form-label" for="booker-pin">
+                <span>Create 4-Digit Security PIN <span class="required-star">*</span></span>
+                <span class="helper-note">Required if you need to edit or cancel later</span>
+              </label>
+              <input id="booker-pin" class="form-input" type="password" maxlength="4" placeholder="•••• (Choose 4-digit secret PIN)" autocomplete="new-password" pattern="[0-9]{4}" inputmode="numeric" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary btn-modal-cancel" type="button">Cancel</button>
+          <button id="booking-submit-btn" class="btn-primary" type="submit">
+            Confirm Booking & Generate Outlook Invite
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal 2: Booking Details & Outlook .ics Download
+       ========================================================================== -->
+  <div id="details-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="details-modal-title">Booking Details</h3>
+        <button class="modal-close" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+      <div id="details-modal-body" class="modal-body">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button id="btn-cancel-booking" class="btn-secondary" style="color: #DA291C;" type="button">
+          ❌ Cancel / Release Slot
+        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="btn-edit-booking" class="btn-secondary" type="button">
+            ✏️ Edit
+          </button>
+          <button id="btn-outlook-invite" class="btn-primary" type="button">
+            📅 Add to NHS Outlook (.ics)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal: Outlook Appointment Recurrence (Matches Outlook Screenshot)
+       ========================================================================== -->
+  <div id="recurrence-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="recurrence-modal-title">
+    <div class="modal-card recurrence-dialog-card">
+      <div class="modal-header recurrence-dialog-header">
+        <h3 id="recurrence-modal-title">Appointment Recurrence</h3>
+        <button class="modal-close" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="modal-body recurrence-dialog-body">
+        <!-- 1. Appointment time -->
+        <fieldset class="outlook-fieldset">
+          <legend class="outlook-legend">Appointment time</legend>
+          <div class="outlook-time-grid">
+            <div class="outlook-field-row">
+              <label for="rec-time-start">Start:</label>
+              <select id="rec-time-start" class="outlook-select">
+                <option value="08:00">08:00</option>
+                <option value="08:30">08:30</option>
+                <option value="09:00">09:00</option>
+                <option value="09:30">09:30</option>
+                <option value="10:00">10:00</option>
+                <option value="10:30">10:30</option>
+                <option value="11:00">11:00</option>
+                <option value="11:30" selected>11:30</option>
+                <option value="12:00">12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                <option value="17:30">17:30</option>
+                <option value="18:00">18:00</option>
+                <option value="18:30">18:30</option>
+              </select>
+            </div>
+            <div class="outlook-field-row">
+              <label for="rec-time-end">End:</label>
+              <select id="rec-time-end" class="outlook-select">
+                <option value="08:30">08:30</option>
+                <option value="09:00">09:00</option>
+                <option value="09:30">09:30</option>
+                <option value="10:00">10:00</option>
+                <option value="10:30">10:30</option>
+                <option value="11:00">11:00</option>
+                <option value="11:30">11:30</option>
+                <option value="12:00" selected>12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                <option value="17:30">17:30</option>
+                <option value="18:00">18:00</option>
+                <option value="18:30">18:30</option>
+                <option value="19:00">19:00</option>
+              </select>
+            </div>
+            <div class="outlook-field-row">
+              <label for="rec-time-duration">Duration:</label>
+              <select id="rec-time-duration" class="outlook-select">
+                <option value="30" selected>30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+                <option value="150">2.5 hours</option>
+                <option value="180">3 hours</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 2. Recurrence pattern -->
+        <fieldset class="outlook-fieldset">
+          <legend class="outlook-legend">Recurrence pattern</legend>
+          <div class="outlook-pattern-layout">
+            <!-- Left Radio Options -->
+            <div class="outlook-pattern-radios">
+              <label class="outlook-radio-label">
+                <input type="radio" name="rec-pattern-type" value="daily">
+                <span>Daily</span>
+              </label>
+              <label class="outlook-radio-label">
+                <input type="radio" name="rec-pattern-type" value="weekly" checked>
+                <span>Weekly</span>
+              </label>
+              <label class="outlook-radio-label">
+                <input type="radio" name="rec-pattern-type" value="monthly">
+                <span>Monthly</span>
+              </label>
+              <label class="outlook-radio-label">
+                <input type="radio" name="rec-pattern-type" value="yearly">
+                <span>Yearly</span>
+              </label>
+            </div>
+
+            <!-- Right Details Panels -->
+            <div class="outlook-pattern-details">
+              <!-- Weekly Panel -->
+              <div id="rec-panel-weekly" class="rec-pattern-panel">
+                <div style="margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem;">
+                  <span>Recur every</span>
+                  <input id="rec-weekly-interval" type="number" class="outlook-number-input" min="1" max="12" value="1">
+                  <span>week(s) on:</span>
+                </div>
+                <div class="outlook-weekdays-grid">
+                  <label class="outlook-day-checkbox"><input type="checkbox" name="rec-weekday" value="1"> <span>Monday</span></label>
+                  <label class="outlook-day-checkbox"><input type="checkbox" name="rec-weekday" value="2"> <span>Tuesday</span></label>
+                  <label class="outlook-day-checkbox"><input type="checkbox" name="rec-weekday" value="3" checked> <span>Wednesday</span></label>
+                  <label class="outlook-day-checkbox"><input type="checkbox" name="rec-weekday" value="4"> <span>Thursday</span></label>
+                  <label class="outlook-day-checkbox"><input type="checkbox" name="rec-weekday" value="5"> <span>Friday</span></label>
+                  <label class="outlook-day-checkbox"><input type="checkbox" name="rec-weekday" value="6"> <span>Saturday</span></label>
+                  <label class="outlook-day-checkbox"><input type="checkbox" name="rec-weekday" value="0"> <span>Sunday</span></label>
+                </div>
+              </div>
+
+              <!-- Daily Panel -->
+              <div id="rec-panel-daily" class="rec-pattern-panel" style="display:none;">
+                <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem;">
+                  <label class="outlook-radio-inline">
+                    <input type="radio" name="rec-daily-mode" value="interval" checked>
+                    <span>Every</span>
+                    <input id="rec-daily-interval" type="number" class="outlook-number-input" min="1" max="30" value="1">
+                    <span>day(s)</span>
+                  </label>
+                  <label class="outlook-radio-inline">
+                    <input type="radio" name="rec-daily-mode" value="weekdays">
+                    <span>Every weekday (Monday to Friday)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Monthly Panel -->
+              <div id="rec-panel-monthly" class="rec-pattern-panel" style="display:none;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem;">
+                  <span>Day</span>
+                  <input id="rec-monthly-day" type="number" class="outlook-number-input" min="1" max="31" value="1">
+                  <span>of every</span>
+                  <input id="rec-monthly-interval" type="number" class="outlook-number-input" min="1" max="12" value="1">
+                  <span>month(s)</span>
+                </div>
+              </div>
+
+              <!-- Yearly Panel -->
+              <div id="rec-panel-yearly" class="rec-pattern-panel" style="display:none;">
+                <div style="font-size: 0.88rem; color: #475569;">
+                  Recurs every year on this date.
+                </div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 3. Range of recurrence -->
+        <fieldset class="outlook-fieldset">
+          <legend class="outlook-legend">Range of recurrence</legend>
+          <div class="outlook-range-layout">
+            <div class="outlook-range-start">
+              <label for="rec-range-start">Start:</label>
+              <input id="rec-range-start" type="date" class="outlook-date-input">
+            </div>
+
+            <div class="outlook-range-end">
+              <label class="outlook-radio-inline">
+                <input type="radio" name="rec-range-mode" value="endBy" checked>
+                <span>End by:</span>
+                <input id="rec-range-end-date" type="date" class="outlook-date-input">
+              </label>
+
+              <label class="outlook-radio-inline">
+                <input type="radio" name="rec-range-mode" value="endAfter">
+                <span>End after:</span>
+                <input id="rec-range-occurrences" type="number" class="outlook-number-input" min="1" max="52" value="10">
+                <span>occurrences</span>
+              </label>
+
+              <label class="outlook-radio-inline">
+                <input type="radio" name="rec-range-mode" value="noEnd">
+                <span>No end date (6 months horizon)</span>
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="modal-footer recurrence-dialog-footer">
+        <button id="btn-rec-ok" class="btn-outlook-primary" type="button">OK</button>
+        <button id="btn-rec-cancel" class="btn-outlook-secondary" type="button">Cancel</button>
+        <button id="btn-rec-remove" class="btn-outlook-secondary" type="button">Remove Recurrence</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal 3: Printable Door Sign & Dynamic QR Code
+       ========================================================================== -->
+  <div id="door-sign-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3>Door Sign & QR Code Poster</h3>
+        <button class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Room & Site Selector for Door Poster -->
+        <div class="form-row-2" style="background:#F8FAFC; border:1px solid #E2E8F0; padding:0.6rem 0.8rem; border-radius:6px; margin-bottom:0.75rem;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="door-site-select" style="font-size:0.78rem;">Trust Campus / Site:</label>
+            <select id="door-site-select" class="form-select" style="font-size:0.82rem; padding:0.35rem 0.6rem;">
+              <option value="QEH Heritage">QEH Heritage</option>
+              <option value="Good Hope">Good Hope</option>
+              <option value="Heartlands">Heartlands</option>
+              <option value="Solihull">Solihull</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="door-room-select" style="font-size:0.78rem;">Room Poster to Print:</label>
+            <select id="door-room-select" class="form-select" style="font-size:0.82rem; padding:0.35rem 0.6rem;"></select>
+          </div>
+        </div>
+
+        <!-- Interactive URL Management for Door Sign -->
+        <div class="door-url-config" style="background:#F0F7FF; border:1px solid #BAE6FD; padding:0.75rem 1rem; border-radius:6px; margin-bottom:1rem; text-align:left;">
+          <label for="door-qr-url-input" style="font-size:0.82rem; font-weight:700; color:#005EB8; display:block; margin-bottom:0.3rem;">
+            📱 Mobile Scan Target URL:
+          </label>
+          <div style="display:flex; gap:0.4rem;">
+            <input id="door-qr-url-input" type="text" class="form-input" style="font-size:0.82rem; padding:0.4rem 0.6rem; flex:1;" placeholder="https://...">
+            <button id="btn-copy-door-url" type="button" class="btn-secondary btn-sm" title="Copy URL to clipboard">📋 Copy</button>
+            <button id="btn-refresh-door-qr" type="button" class="btn-primary btn-sm" title="Update QR with this URL">🔄 Update QR</button>
+          </div>
+          <div style="font-size:0.75rem; color:#475569; margin-top:0.35rem;">
+            💡 <strong>Mobile Note</strong>: To let staff book via their smartphones, point this to your web URL (e.g. GitHub Pages) or local HTTP server (<code>http://[Your-PC-IP]:8089</code>).
+          </div>
+        </div>
+
+        <div class="door-sign-wrapper" id="printable-door-sign">
+          <div class="door-sign-header">
+            <div class="nhs-logo-badge" style="font-size: 1.5rem; padding: 0.2rem 0.8rem;">NHS</div>
+            <div style="font-weight: 700; color: #005EB8; margin-top: 0.4rem;">University Hospitals Birmingham NHS Foundation Trust</div>
+            <div id="door-sign-room-title" class="door-sign-title">Pharmacy Seminar Room</div>
+            <div id="door-sign-room-subtitle" class="door-sign-subtitle">Level 1 • Queen Elizabeth Hospital Birmingham</div>
+          </div>
+
+          <div class="door-qr-container">
+            <div id="door-qr-code" class="qr-code-box"></div>
+            <div class="door-instructions">
+              📷 <strong>Scan with any Smartphone Camera</strong><br>
+              Check live room availability or book a 30-minute slot on the spot
+            </div>
+          </div>
+
+          <div style="text-align: left; font-size: 0.82rem; color: #475569; border-top: 1px solid #CBD5E1; padding-top: 1rem; margin-top: 1.5rem;">
+            <strong>Room Etiquette & Facilities:</strong>
+            <ul id="door-sign-etiquette-list" style="margin-left: 1.2rem; margin-top: 0.3rem;">
+              <li>Maximum room capacity: <strong>16 people</strong></li>
+              <li>Equipped with Wall Display, Teams Owl 360 Camera, & Whiteboard</li>
+              <li>Please keep room tidy and wipe whiteboard after sessions</li>
+              <li>Please cancel your slot in the app if your meeting is cancelled</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary btn-modal-cancel" type="button">Close</button>
+        <button id="print-sign-action-btn" class="btn-primary" type="button">
+          🖨️ Print Door Poster (A4)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal 4: Admin Superuser Login
+       ========================================================================== -->
+  <div id="admin-login-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3>Admin Superuser Access</h3>
+        <button class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">
+          Superuser mode permits pharmacy IT leads and administrators to override, edit, or remove any booking across the department, and schedule maintenance room closures.
+        </p>
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label class="form-label" for="admin-pin-input">Enter Master Admin PIN:</label>
+          <input id="admin-pin-input" class="form-input" type="password" placeholder="Admin PIN" autocomplete="off">
+          <span class="helper-note" style="margin-top: 0.3rem;">Authorized Pharmacy IT & Admin Leads only</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary btn-modal-cancel" type="button">Cancel</button>
+        <button id="admin-login-submit" class="btn-primary" type="button">Log In Superuser</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal 5: Admin Maintenance / Blackout Block
+       ========================================================================== -->
+  <div id="admin-block-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>Schedule Room Maintenance Block</h3>
+        <button class="modal-close" type="button">&times;</button>
+      </div>
+      <form id="admin-block-form">
+        <div class="modal-body">
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Close the room for deep cleaning, estates works, directorate examinations, or equipment maintenance.
+          </p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="block-site">Site:</label>
+              <select id="block-site" class="form-select">
+                <option value="QEH Heritage">QEH Heritage</option>
+                <option value="Good Hope">Good Hope</option>
+                <option value="Heartlands">Heartlands</option>
+                <option value="Solihull">Solihull</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="block-room">Room to Block:</label>
+              <select id="block-room" class="form-select"></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="block-date">Date:</label>
+            <input id="block-date" class="form-input" type="date" required>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="block-start-time">Start Time:</label>
+              <select id="block-start-time" class="form-select" required>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="block-end-time">End Time:</label>
+              <select id="block-end-time" class="form-select" required>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="block-reason">Closure Reason:</label>
+            <input id="block-reason" class="form-input" type="text" placeholder="e.g. Estates AV Upgrade / Directorate Exams" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary btn-modal-cancel" type="button">Cancel</button>
+          <button class="btn-primary" type="submit" style="background: #DA291C;">Schedule Room Closure</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal 6: Cloud Realtime Database Settings
+       ========================================================================== -->
+  <!-- ==========================================================================
+       Modal: Admin Superuser - Manage Trust Hospital Rooms & Sites
+       ========================================================================== -->
+  <div id="manage-rooms-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="manage-rooms-title">
+    <div class="modal-card" style="max-width: 780px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="manage-rooms-title">🏢 Hospital Sites & Rooms Management</h3>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+            Configure, add, or edit rooms across QEH Heritage, Good Hope, Heartlands, and Solihull.
+          </p>
+        </div>
+        <button class="modal-close" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="modal-body" style="max-height: 72vh; overflow-y: auto;">
+        <!-- Add / Edit Room Form Card -->
+        <div class="admin-room-form-card">
+          <div class="admin-room-form-header">
+            <h4 id="room-form-title">➕ Add Additional Room</h4>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Admin Superuser Tool</span>
+          </div>
+          <form id="admin-add-room-form">
+            <input type="hidden" id="edit-room-id" value="">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="room-form-site">
+                  <span>Trust Hospital Site <span class="required-star">*</span></span>
+                </label>
+                <select id="room-form-site" class="form-select" required>
+                  <option value="QEH Heritage">QEH Heritage</option>
+                  <option value="Good Hope">Good Hope</option>
+                  <option value="Heartlands">Heartlands</option>
+                  <option value="Solihull">Solihull</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="room-form-name">
+                  <span>Room Name <span class="required-star">*</span></span>
+                </label>
+                <input id="room-form-name" class="form-input" type="text" placeholder="e.g. Clinical Trials Seminar Room" required>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="room-form-location">
+                  <span>Floor / Building / Location <span class="required-star">*</span></span>
+                </label>
+                <input id="room-form-location" class="form-input" type="text" placeholder="e.g. Level 2, Heritage Building" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="room-form-capacity">
+                  <span>Max Seating Capacity <span class="required-star">*</span></span>
+                </label>
+                <input id="room-form-capacity" class="form-input" type="number" min="1" max="100" value="12" required>
+              </div>
+            </div>
+
+            <!-- Facilities & Equipment Available -->
+            <div class="form-group">
+              <label class="form-label">
+                <span>Facilities & Equipment Included</span>
+              </label>
+              <div class="equipment-grid-compact">
+                <label class="checkbox-label"><input type="checkbox" name="room-form-equipment" value="wall_display" checked> <span>📺 Wall AV Display / Projector</span></label>
+                <label class="checkbox-label"><input type="checkbox" name="room-form-equipment" value="owl_camera" checked> <span>🦉 Teams Owl 360° Camera</span></label>
+                <label class="checkbox-label"><input type="checkbox" name="room-form-equipment" value="whiteboard" checked> <span>📋 Whiteboard & Dry Markers</span></label>
+                <label class="checkbox-label"><input type="checkbox" name="room-form-equipment" value="flipchart"> <span>📄 Flipchart & Paper</span></label>
+                <label class="checkbox-label"><input type="checkbox" name="room-form-equipment" value="polycom_phone"> <span>📞 Conference Phone</span></label>
+                <label class="checkbox-label"><input type="checkbox" name="room-form-equipment" value="pc_workstations"> <span>💻 PC Workstations</span></label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="room-form-description">
+                <span>Room Description / Usage Guidelines (Optional)</span>
+              </label>
+              <input id="room-form-description" class="form-input" type="text" placeholder="e.g. Reserved for Pharmacy Education and Multidisciplinary Clinical Case Reviews">
+            </div>
+
+            <div style="display:flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+              <button id="btn-cancel-edit-room" class="btn-secondary btn-sm" type="button" style="display:none;">Cancel Edit</button>
+              <button id="btn-save-room-submit" class="btn-primary btn-sm" type="submit">➕ Add Room to Site</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Existing Rooms Directory Grouped by Site -->
+        <div class="existing-rooms-section" style="margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--nhs-dark-blue); margin: 0;">
+              Current Hospital Rooms Directory
+            </h4>
+            <span id="admin-total-rooms-count" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">
+              4 rooms configured
+            </span>
+          </div>
+          <div id="admin-rooms-list" class="admin-rooms-list">
+            <!-- Dynamically rendered list of rooms grouped by site -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary btn-modal-cancel" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal: Staff & Users Directory (Importable / Editable)
+       ========================================================================== -->
+  <div id="manage-users-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="manage-users-title">
+    <div class="modal-card" style="max-width: 860px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="manage-users-title">👥 Pharmacy Staff & User Directory</h3>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+            Manage pharmacy team members for instant name autocomplete and authorized bookings.
+          </p>
+        </div>
+        <button class="modal-close" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="modal-body" style="max-height: 72vh; overflow-y: auto;">
+        <!-- Add / Edit Staff Form -->
+        <div class="admin-room-form-card">
+          <div class="admin-room-form-header">
+            <h4 id="user-form-title">➕ Add Staff Member</h4>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Admin Superuser Tool</span>
+          </div>
+          <form id="admin-add-user-form">
+            <input type="hidden" id="edit-user-id" value="">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="user-form-name">
+                  <span>Full Name <span class="required-star">*</span></span>
+                </label>
+                <input id="user-form-name" class="form-input" type="text" placeholder="e.g. Dr. Asif / Sarah Jenkins" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="user-form-email">
+                  <span>NHS Email <span class="required-star">*</span></span>
+                </label>
+                <input id="user-form-email" class="form-input" type="email" placeholder="name@uhb.nhs.uk" required>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="user-form-bleep">
+                  <span>Bleep / Extension</span>
+                </label>
+                <input id="user-form-bleep" class="form-input" type="text" placeholder="e.g. Bleep 4120 or Ext 14892">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="user-form-dept">
+                  <span>Department / Specialty</span>
+                </label>
+                <select id="user-form-dept" class="form-select">
+                  <option value="Clinical Pharmacy">Clinical Pharmacy</option>
+                  <option value="Dispensary">Dispensary</option>
+                  <option value="Aseptics & Radiopharmacy">Aseptics & Radiopharmacy</option>
+                  <option value="Medicines Information (MI)">Medicines Information (MI)</option>
+                  <option value="EPMA / Digital Health">EPMA / Digital Health</option>
+                  <option value="Education & Training">Education & Training</option>
+                  <option value="Directorate Management">Directorate Management</option>
+                  <option value="Oncology & Chemotherapy">Oncology & Chemotherapy</option>
+                  <option value="Specialist Clinical">Specialist Clinical</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="user-form-role">
+                  <span>User Role</span>
+                </label>
+                <select id="user-form-role" class="form-select">
+                  <option value="staff">Standard Staff</option>
+                  <option value="lead">Clinical Lead / Senior</option>
+                  <option value="admin">Superuser Admin</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="user-form-pin">
+                  <span>Default 4-Digit PIN</span>
+                </label>
+                <input id="user-form-pin" class="form-input" type="text" maxlength="4" placeholder="1234" value="1234">
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+              <button id="btn-cancel-edit-user" class="btn-secondary btn-sm" type="button" style="display:none;">Cancel Edit</button>
+              <button id="btn-save-user-submit" class="btn-primary btn-sm" type="submit">➕ Save Staff Member</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Staff List & Controls -->
+        <div style="margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <div>
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--nhs-dark-blue); margin: 0;">
+                Registered Pharmacy Staff (<span id="admin-total-users-count">0</span>)
+              </h4>
+            </div>
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <input id="user-search-input" class="form-input" type="search" placeholder="Search staff..." style="padding: 0.3rem 0.6rem; font-size: 0.8rem; width: 170px;">
+              <input id="user-csv-file-input" type="file" accept=".xlsx, .xls, .csv" style="display: none;">
+              <button id="btn-import-users-csv" class="btn-secondary btn-sm" type="button" title="Upload Excel (.xlsx) or CSV staff directory">
+                📥 Import Excel / CSV
+              </button>
+              <button id="btn-export-users-csv" class="btn-secondary btn-sm" type="button" title="Download staff list as CSV">
+                📤 Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div id="admin-users-table-container" style="overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-surface);">
+            <table class="nhs-table" style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+              <thead style="background: var(--bg-surface-subtle); border-bottom: 1px solid var(--border-medium);">
+                <tr>
+                  <th style="padding: 6px 10px; text-align: left;">Staff Name</th>
+                  <th style="padding: 6px 10px; text-align: left;">NHS Email</th>
+                  <th style="padding: 6px 10px; text-align: left;">Bleep / Ext</th>
+                  <th style="padding: 6px 10px; text-align: left;">Department</th>
+                  <th style="padding: 6px 10px; text-align: left;">Role</th>
+                  <th style="padding: 6px 10px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-table-body">
+                <!-- Dynamically rendered rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary btn-modal-cancel" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cloud-settings-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 560px;">
+      <div class="modal-header">
+        <div>
+          <h3>Cloud Database & Multi-Device Sync</h3>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+            Enables instant sync across mobile phones scanning door QR codes & NHS desktop workstations.
+          </p>
+        </div>
+        <button class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Google Sheets Backend Section -->
+        <div style="background: var(--bg-surface-subtle); border: 2px solid #007f3b; border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="font-size: 1.15rem;">📊</span>
+              <strong style="color: var(--nhs-dark-blue); font-size: 0.95rem;">Google Sheets Backend (Active Sheet)</strong>
+            </div>
+            <span style="font-size: 0.72rem; background: #e6f4ea; color: #137333; padding: 2px 6px; border-radius: 4px; font-weight: 700;">100% Free • Recommended</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.65rem;">
+            Linked to your Google Sheet: <a href="https://docs.google.com/spreadsheets/d/11mlTa-Jkt_lSfrJKXBFGD6NVEsKnJ42_5SerYNFy1xE/edit" target="_blank" style="color: var(--nhs-blue); font-weight:600; text-decoration: underline;">Open Seminar Room Booking Sheet ↗</a>. View and edit bookings and staff directory in real-time.
+          </p>
+          <div class="form-group">
+            <label class="form-label" for="google-sheet-url-input">Google Apps Script Web App URL:</label>
+            <input id="google-sheet-url-input" class="form-input" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+            <span class="helper-note" style="margin-top: 0.25rem;">
+              Paste the Web App URL from Extensions &gt; Apps Script &gt; Deploy as Web App.
+            </span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.65rem;">
+            <button id="btn-test-google-sheet" class="btn-secondary btn-sm" type="button">
+              📊 Test Connection
+            </button>
+            <span id="google-sheet-test-status" style="font-size: 0.8rem; font-weight: 600;"></span>
+          </div>
+        </div>
+
+        <!-- Supabase Section -->
+        <div style="background: var(--bg-surface-subtle); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="font-size: 1.1rem;">⚡</span>
+              <strong style="color: var(--nhs-dark-blue); font-size: 0.95rem;">Supabase Cloud Backend (Recommended)</strong>
+            </div>
+            <span style="font-size: 0.72rem; background: #e0f2fe; color: #0284c7; padding: 2px 6px; border-radius: 4px; font-weight: 700;">100% Free Tier</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Sub-second real-time sync with an Excel-like Table Editor to easily edit rooms, bookings, and import staff CSVs.
+          </p>
+          <div class="form-group">
+            <label class="form-label" for="supabase-url-input">Supabase Project URL:</label>
+            <input id="supabase-url-input" class="form-input" type="url" placeholder="https://your-project-id.supabase.co">
+          </div>
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <label class="form-label" for="supabase-anon-key-input">Supabase Anon Public API Key:</label>
+            <input id="supabase-anon-key-input" class="form-input" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.65rem;">
+            <button id="btn-test-supabase" class="btn-secondary btn-sm" type="button">
+              ⚡ Test Connection
+            </button>
+            <span id="supabase-test-status" style="font-size: 0.8rem; font-weight: 600;"></span>
+          </div>
+        </div>
+
+        <!-- Optional Fallback REST / Firebase Accordion -->
+        <details style="font-size: 0.82rem; color: var(--text-muted);">
+          <summary style="cursor: pointer; font-weight: 600; color: var(--nhs-blue);">
+            Advanced / Alternative REST Endpoint (Optional)
+          </summary>
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <label class="form-label" for="cloud-url-input">Custom REST / Firebase Database URL:</label>
+            <input id="cloud-url-input" class="form-input" type="url" placeholder="https://[project-id].firebaseio.com/bookings.json">
+            <span class="helper-note" style="margin-top: 0.35rem;">
+              Leave blank if using Supabase or local network mode.
+            </span>
+          </div>
+        </details>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary btn-modal-cancel" type="button">Cancel</button>
+        <button id="save-cloud-settings-btn" class="btn-primary" type="button">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Neuralyzer Full-Screen Flash Overlay
+       ========================================================================== -->
+  <div id="neuralyzer-flash" class="neuralyzer-flash"></div>
+
+  <!-- ==========================================================================
+       Modal: Booker PIN Verification for Cancellation
+       ========================================================================== -->
+  <div id="cancel-pin-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cancel-pin-title">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 id="cancel-pin-title">Cancel / Release Room Slot</h3>
+        <button class="modal-close" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="cancel-pin-desc" style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+          To prevent unauthorized cancellations or edits, please enter the <strong>4-digit PIN</strong> created by the booker.
+        </p>
+        <div class="form-group">
+          <label class="form-label" for="cancel-slot-pin">4-Digit Booker PIN:</label>
+          <input id="cancel-slot-pin" class="form-input" type="password" maxlength="4" placeholder="••••" pattern="[0-9]{4}" inputmode="numeric" style="font-size: 1.25rem; letter-spacing: 0.35rem; text-align: center;" autofocus>
+        </div>
+        <div id="cancel-pin-error" style="display:none; color:#DA291C; font-size:0.82rem; font-weight:600; margin-top:0.4rem;"></div>
+      </div>
+      <div class="modal-footer" style="flex-direction: column; gap: 0.5rem;">
+        <div style="display: flex; gap: 0.5rem; width: 100%; justify-content: flex-end;">
+          <button class="btn-secondary btn-modal-cancel" type="button">Cancel</button>
+          <button id="btn-verify-cancel-pin" class="btn-primary" type="button" style="background:#DA291C; border-color:#DA291C;">Verify &amp; Proceed</button>
+        </div>
+        <button id="btn-not-my-booking" type="button" class="btn-link" style="font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-top: 0.2rem; cursor: pointer; background: none; border: none; text-decoration: underline;">
+          I do not have the PIN / This is not my booking
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Modal: Men-In-Black Neuralyzer Pop-Up (Unauthorized Cancellation Intercept)
+       ========================================================================== -->
+  <div id="mib-modal" class="modal-overlay mib-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mib-modal-title">
+    <div class="modal-card mib-card">
+      <div class="mib-header-bar">
+        <div class="mib-badge">🕶️ DEPARTMENT OF PHARMACY • SPECIAL OPERATIONS</div>
+        <button class="modal-close mib-close-btn" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="mib-body">
+        <!-- Animated MIB Agents Back-to-Back with Neuralyzer Device (Brought up & Flashes Red) -->
+        <div class="mib-artwork-container" style="background:#020617; border: 1px solid #1E293B; border-radius: 12px; padding: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.7); max-width: 480px; margin: 0 auto 0.75rem auto;">
+          <img id="mibGif" src="assets/mib_neuralyzer.svg" alt="Men In Black Back-To-Back Neuralyzer Flashing Red" style="width: 100%; max-width: 460px; height: auto; display: block; margin: 0 auto; border-radius: 8px;">
+        </div>
+
+        <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin: 0.5rem 0 0.75rem 0;">
+          <button type="button" id="lockoutSoundBtn" class="btn btn-ghost btn-sm" style="display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; color:#E2E8F0; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:16px; padding:4px 14px; cursor:pointer;" title="Turn the spoken warning on or off">🔊 Sound on</button>
+        </div>
+
+        <div class="mib-narrative">
+          <h2 class="mib-title">🕶️ NOTHING TO SEE HERE...</h2>
+          <p class="mib-sub">
+            Please look directly into the red flash emitter.
+          </p>
+          <div class="mib-speech-bubble">
+            "That bright flash? Just swamp gas reflecting off Venus. <strong>You did not book this seminar room slot</strong>, so you cannot cancel it. You were actually on your way to get a cup of tea."
+          </div>
+          <p style="font-size: 0.8rem; color: #94A3B8; margin-top: 0.75rem;">
+            ⚠️ <em>Only the original booker with their 4-digit PIN, or an authorized Directorate Administrator, can release this room.</em>
+          </p>
+        </div>
+
+        <!-- Admin Password Entry to Override and Cancel -->
+        <div class="mib-admin-box">
+          <div style="font-size: 0.84rem; font-weight: 700; color: #38BDF8; margin-bottom: 0.4rem;">
+            🔐 Directorate Admin Superuser Override:
+          </div>
+          <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+            <input id="mib-admin-password" type="password" class="mib-password-input" placeholder="Enter Directorate Admin Password" autocomplete="off">
+            <button id="btn-mib-override-cancel" type="button" class="btn-mib-override">
+              Verify & Release Slot
+            </button>
+          </div>
+          <div id="mib-auth-status" class="mib-auth-status" style="display: none;"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer mib-footer">
+        <button id="btn-mib-dismiss" class="btn-mib-dismiss" type="button">
+          Dismiss & Return to Calendar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="qrcode.js?v=2.2"></script>
+  <script src="sync-engine.js?v=2.2"></script>
+  <script src="app.js?v=2.2"></script>
+</body>
+</html>
