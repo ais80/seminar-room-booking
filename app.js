@@ -392,7 +392,7 @@
                   <span class="tag-department">${booking.department}</span>
                 </div>
                 <div class="booked-meta">
-                  <span>👤 <strong>${booking.bookerName}</strong> (${booking.bleep})</span>
+                  <span>👤 <strong>${booking.bookerName}</strong>${booking.bleep ? ` (${booking.bleep})` : ''}</span>
                   <span>👥 ${booking.attendees} attendees</span>
                   <span>🕒 ${booking.startTime} - ${booking.endTime} (${booking.durationMinutes}m)</span>
                 </div>
@@ -528,7 +528,7 @@
                   <span class="tag-department">${b1.department}</span>
                 </div>
                 <div class="booked-meta">
-                  <span>👤 <strong>${b1.bookerName}</strong> (${b1.bleep})</span>
+                  <span>👤 <strong>${b1.bookerName}</strong>${b1.bleep ? ` (${b1.bleep})` : ''}</span>
                   <span>👥 ${b1.attendees} attendees</span>
                   <span>🕒 ${b1.startTime} - ${b1.endTime} (${b1.durationMinutes}m)</span>
                 </div>
@@ -795,7 +795,7 @@
               ${b.isBlocked ? '🔒 ' : ''}${b.title}
             </div>
             <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem;">
-              👤 ${b.bookerName} (${b.department}) • 📟 ${b.bleep} • 👥 ${b.attendees} attendees
+              👤 ${b.bookerName} (${b.department})${b.bleep ? ` • 📟 ${b.bleep}` : ''} • 👥 ${b.attendees} attendees
             </div>
           </div>
           <div style="text-align:right;">
@@ -1550,8 +1550,8 @@
     const pin = elements.bookerPinInput.value.trim();
 
     // Validations
-    if (!name || !email || !bleep || !title) {
-      alert("Please complete all required fields (Name, NHS Email, Bleep/Ext, Title).");
+    if (!name || !email || !title) {
+      alert("Please complete all required fields (Name, NHS Email, Title).");
       return;
     }
 
@@ -1725,7 +1725,7 @@
         </div>
         <div>
           <span style="color:var(--text-muted);">Contact Bleep / Ext:</span><br>
-          <strong>${booking.bleep}</strong>
+          <strong>${booking.bleep || '—'}</strong>
         </div>
         <div>
           <span style="color:var(--text-muted);">Expected Attendees:</span><br>
@@ -1969,7 +1969,7 @@
     setBookingDuration(booking.durationMinutes || 30);
     elements.bookerNameInput.value = booking.bookerName;
     elements.bookerEmailInput.value = booking.email;
-    elements.bookerBleepInput.value = booking.bleep;
+    elements.bookerBleepInput.value = booking.bleep || "";
     elements.bookerDeptInput.value = booking.department;
     elements.bookingTitleInput.value = booking.title;
     elements.bookingAttendeesInput.value = booking.attendees;
