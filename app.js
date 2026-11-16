@@ -422,22 +422,22 @@
         const isPastSlot = isToday ? (slotEndMinutes <= nowMinutes) : (dateStr < getISODate(now));
         if (isPastSlot) {
           slotRow.classList.add("is-past");
-          contentCol.innerHTML = 
+          contentCol.innerHTML = `
             <div class="past-slot-card">
-              <span>⌛ Concluded Time Slot ( - )</span>
+              <span>⌛ Concluded Time Slot (${timeStartStr} - ${timeEndStr})</span>
             </div>
-          ;
+          `;
           contentCol.onclick = () => {
             alert("This time slot has already concluded. Please choose an upcoming slot to book.");
           };
         } else {
           slotRow.classList.add("is-available");
-          contentCol.innerHTML = 
+          contentCol.innerHTML = `
             <div class="available-slot-card">
               <span>✨ 30-Minute Slot Available • Click to Reserve</span>
               <span class="badge-book-now">+ Book Slot</span>
             </div>
-          ;
+          `;
           contentCol.onclick = () => openBookingModal(dateStr, timeStartStr);
         }
       }
@@ -2226,7 +2226,7 @@
         elements.btnResendEmailInvite.textContent = "⏳ Sending...";
         try {
           const res = await window.SyncEngine.sendCalendarInviteEmail(activeDetailsBooking);
-          alert(✅ Calendar invitation successfully emailed to ${activeDetailsBooking.email}!);
+          alert(`✅ Calendar invitation successfully emailed to ${activeDetailsBooking.email}!`);
         } catch (err) {
           alert("Notice: Could not send email invite: " + err.message);
         } finally {
