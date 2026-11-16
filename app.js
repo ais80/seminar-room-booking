@@ -1,4 +1,4 @@
-﻿/**
+/**
  * QE Pharmacy Seminar Room Booking System
  * Application Logic & UI Controller
  * University Hospitals Birmingham NHS Foundation Trust
@@ -2226,7 +2226,12 @@
         elements.btnResendEmailInvite.textContent = "⏳ Sending...";
         try {
           const res = await window.SyncEngine.sendCalendarInviteEmail(activeDetailsBooking);
-          alert(`✅ Calendar invitation successfully emailed to ${activeDetailsBooking.email}!`);
+          if (res && res.emailResult && res.emailResult.sent === true) {
+            alert(`✅ Calendar invitation successfully emailed to ${activeDetailsBooking.email}!`);
+          } else {
+            const reason = (res && res.emailResult && (res.emailResult.error || res.emailResult.reason)) || (res && res.error) || "Unknown backend response";
+            alert(`⚠️ Email could not be sent:\n\n${reason}\n\nNote: If this says 'permission to call MailApp.sendEmail', open the Google Sheet > Extensions > Apps Script and run 'authorizeEmailPermission' once to grant email permission.`);
+          }
         } catch (err) {
           alert("Notice: Could not send email invite: " + err.message);
         } finally {
