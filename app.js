@@ -453,7 +453,7 @@
           <span>🕒 ${hourStartStr} – ${hourEndStr} (Half-Hourly Slots)</span>
           <button type="button" class="btn-expand-half-hours">▴ Collapse to Hour</button>
         `;
-        hdr.querySelector(".btn-expand-half-hours").onclick = (e) => {
+        hdr.onclick = (e) => {
           e.stopPropagation();
           state.expandedHours[expandKey] = false;
           renderDayTimeline();
@@ -482,12 +482,18 @@
       slotRow.className = "slot-row";
 
       const timeCol = document.createElement("div");
-      timeCol.className = "slot-time-col";
+      timeCol.className = "slot-time-col is-expandable-time";
+      timeCol.title = "Click to expand into 30-minute slots";
       timeCol.innerHTML = `
         <span class="slot-time-start">${hourStartStr}</span>
         <span class="slot-time-end">${hourEndStr}</span>
         ${isCurrentHour ? `<span class="live-hour-pill">NOW</span>` : ""}
       `;
+      timeCol.onclick = (e) => {
+        e.stopPropagation();
+        state.expandedHours[expandKey] = true;
+        renderDayTimeline();
+      };
       slotRow.appendChild(timeCol);
 
       const contentCol = document.createElement("div");
