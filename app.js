@@ -20,7 +20,9 @@
     recurrence: null, // null if one-off, or recurrence config object
     isDarkMode: localStorage.getItem("qe_theme") === "dark",
     pendingPinAction: "cancel",
-    pinFailedAttempts: 0
+    pinFailedAttempts: 0,
+    showPastSlots: false,
+    expandedHours: {}
   };
 
   // DOM Elements Cache
@@ -245,7 +247,7 @@
   function applyTheme() {
     document.documentElement.setAttribute("data-theme", state.isDarkMode ? "dark" : "light");
     if (elements.themeToggleBtn) {
-      elements.themeToggleBtn.innerHTML = state.isDarkMode ? "?? Light" : "?? Dark";
+      elements.themeToggleBtn.innerHTML = state.isDarkMode ? "☀️ Light" : "🌙 Dark";
     }
   }
 
@@ -317,7 +319,7 @@
     }
   }
 
-  // Render Day Timeline Grid
+  // Render Day Timeline Grid (Hourly by default, expandable to 30-min slots, past hours collapsed by default)
   function renderDayTimeline() {
     const container = elements.dayTimelineContainer;
     container.innerHTML = "";
@@ -325,7 +327,6 @@
     const dateStr = getISODate(state.selectedDate);
     const openH = window.SyncEngine.config.openHour || 8;
     const closeH = window.SyncEngine.config.closeHour || 19;
-    const totalSlots = (closeH - openH) * 2; // 2 half-hour slots per hour
 
     const dateBookings = window.SyncEngine.bookings.filter(b => {
       if (b.date !== dateStr) return false;
@@ -334,31 +335,20 @@
     });
 
     const now = new Date();
-    const isToday = getISODate(now) === dateStr;
+    const todayStr = getISODate(now);
+    const isToday = todayStr === dateStr;
+    const isPastDate = dateStr < todayStr;
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
     const timelineWrapper = document.createElement("div");
     timelineWrapper.className = "timeline-slots-container";
 
-    // Current Time Marker (if viewing today)
-    if (isToday && nowMinutes >= openH * 60 && nowMinutes <= closeH * 60) {
-      const startOfDayMins = openH * 60;
-      const totalDayMins = (closeH - openH) * 60;
-      const pct = ((nowMinutes - startOfDayMins) / totalDayMins) * 100;
-      const marker = document.createElement("div");
-      marker.className = "current-time-marker";
-      marker.style.top = `${pct}%`;
-      marker.title = `Current Time: ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-      timelineWrapper.appendChild(marker);
-    }
-
-    for (let i = 0; i < totalSlots; i++) {
-      const slotStartMinutes = openH * 60 + i * 30;
+    // Helper: render a single 30-minute slot row
+    function createHalfHourRow(slotStartMinutes, isSubSlot) {
       const slotEndMinutes = slotStartMinutes + 30;
       const timeStartStr = window.SyncEngine.minutesToTime(slotStartMinutes);
       const timeEndStr = window.SyncEngine.minutesToTime(slotEndMinutes);
 
-      // Check if slot falls inside an existing booking
       const booking = dateBookings.find(b => {
         const bStart = window.SyncEngine.timeToMinutes(b.startTime);
         const bEnd = window.SyncEngine.timeToMinutes(b.endTime);
@@ -366,9 +356,8 @@
       });
 
       const slotRow = document.createElement("div");
-      slotRow.className = "slot-row";
+      slotRow.className = "slot-row" + (isSubSlot ? " is-half-slot" : "");
 
-      // Time Column
       const timeCol = document.createElement("div");
       timeCol.className = "slot-time-col";
       timeCol.innerHTML = `
@@ -377,7 +366,6 @@
       `;
       slotRow.appendChild(timeCol);
 
-      // Content Column
       const contentCol = document.createElement("div");
       contentCol.className = "slot-content-col";
 
@@ -386,7 +374,7 @@
           slotRow.classList.add("is-blocked");
           contentCol.innerHTML = `
             <div class="blocked-card">
-              <span>??</span>
+              <span>🔒</span>
               <div>
                 <strong>${booking.title}</strong>
                 <div style="font-size:0.72rem; opacity:0.85;">Scheduled by Directorate Admin</div>
@@ -404,14 +392,14 @@
                   <span class="tag-department">${booking.department}</span>
                 </div>
                 <div class="booked-meta">
-                  <span>?? <strong>${booking.bookerName}</strong> (${booking.bleep})</span>
-                  <span>?? ${booking.attendees} attendees</span>
-                  <span>?? ${booking.startTime} - ${booking.endTime} (${booking.durationMinutes}m)</span>
+                  <span>👤 <strong>${booking.bookerName}</strong> (${booking.bleep})</span>
+                  <span>👥 ${booking.attendees} attendees</span>
+                  <span>🕒 ${booking.startTime} - ${booking.endTime} (${booking.durationMinutes}m)</span>
                 </div>
               </div>
               <div class="booked-actions-quick">
                 <button class="btn-slot-action" title="Add to Outlook Calendar" onclick="event.stopPropagation(); window.SyncEngine.generateICS(window.currentClickedBooking = ${JSON.stringify(booking).replace(/"/g, '&quot;')})">
-                  ?? Outlook
+                  📅 Outlook
                 </button>
               </div>
             </div>
@@ -419,7 +407,7 @@
           contentCol.onclick = () => openDetailsModal(booking);
         }
       } else {
-        const isPastSlot = isToday ? (slotEndMinutes <= nowMinutes) : (dateStr < getISODate(now));
+        const isPastSlot = isToday ? (slotEndMinutes <= nowMinutes) : isPastDate;
         if (isPastSlot) {
           slotRow.classList.add("is-past");
           contentCol.innerHTML = `
@@ -438,17 +426,229 @@
               <span class="badge-book-now">+ Book Slot</span>
             </div>
           `;
-          contentCol.onclick = () => openBookingModal(dateStr, timeStartStr);
+          contentCol.onclick = () => openBookingModal(dateStr, timeStartStr, 30);
         }
+      }
+
+      slotRow.appendChild(contentCol);
+      return slotRow;
+    }
+
+    // Helper: render an hour block (either collapsed 1-hour summary or expanded 2x30-min slots)
+    function appendHourBlock(h) {
+      const hourStartMins = h * 60;
+      const halfStartMins = hourStartMins + 30;
+      const hourEndMins = (h + 1) * 60;
+      const hourStartStr = window.SyncEngine.minutesToTime(hourStartMins);
+      const halfStartStr = window.SyncEngine.minutesToTime(halfStartMins);
+      const hourEndStr = window.SyncEngine.minutesToTime(hourEndMins);
+      const expandKey = `${dateStr}_${h}`;
+      const isExpanded = !!state.expandedHours[expandKey];
+      const isCurrentHour = isToday && nowMinutes >= hourStartMins && nowMinutes < hourEndMins;
+
+      if (isExpanded) {
+        const hdr = document.createElement("div");
+        hdr.className = "hour-group-header";
+        hdr.innerHTML = `
+          <span>🕒 ${hourStartStr} – ${hourEndStr} (Half-Hourly Slots)</span>
+          <button type="button" class="btn-expand-half-hours">▴ Collapse to Hour</button>
+        `;
+        hdr.querySelector(".btn-expand-half-hours").onclick = (e) => {
+          e.stopPropagation();
+          state.expandedHours[expandKey] = false;
+          renderDayTimeline();
+        };
+        timelineWrapper.appendChild(hdr);
+        timelineWrapper.appendChild(createHalfHourRow(hourStartMins, true));
+        timelineWrapper.appendChild(createHalfHourRow(halfStartMins, true));
+        return;
+      }
+
+      const b1 = dateBookings.find(b => {
+        const s = window.SyncEngine.timeToMinutes(b.startTime);
+        const e = window.SyncEngine.timeToMinutes(b.endTime);
+        return hourStartMins >= s && hourStartMins < e;
+      });
+      const b2 = dateBookings.find(b => {
+        const s = window.SyncEngine.timeToMinutes(b.startTime);
+        const e = window.SyncEngine.timeToMinutes(b.endTime);
+        return halfStartMins >= s && halfStartMins < e;
+      });
+
+      const isPast1 = isToday ? (halfStartMins <= nowMinutes) : isPastDate;
+      const isPast2 = isToday ? (hourEndMins <= nowMinutes) : isPastDate;
+
+      const slotRow = document.createElement("div");
+      slotRow.className = "slot-row";
+
+      const timeCol = document.createElement("div");
+      timeCol.className = "slot-time-col";
+      timeCol.innerHTML = `
+        <span class="slot-time-start">${hourStartStr}</span>
+        <span class="slot-time-end">${hourEndStr}</span>
+        ${isCurrentHour ? `<span class="live-hour-pill">NOW</span>` : ""}
+      `;
+      slotRow.appendChild(timeCol);
+
+      const contentCol = document.createElement("div");
+      contentCol.className = "slot-content-col";
+
+      const toggleBtnHtml = `<button type="button" class="btn-expand-half-hours" title="Expand into 30-minute slots">▾ 30m Slots</button>`;
+
+      // Case 1: Same booking/block covers entire hour
+      if (b1 && b2 && b1.id === b2.id) {
+        if (b1.isBlocked) {
+          slotRow.classList.add("is-blocked");
+          contentCol.innerHTML = `
+            <div class="blocked-card" style="justify-content:space-between; width:100%;">
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <span>🔒</span>
+                <div>
+                  <strong>${b1.title}</strong>
+                  <div style="font-size:0.72rem; opacity:0.85;">Scheduled by Directorate Admin</div>
+                </div>
+              </div>
+              ${toggleBtnHtml}
+            </div>
+          `;
+          contentCol.onclick = () => openDetailsModal(b1);
+        } else {
+          slotRow.classList.add("is-booked");
+          contentCol.innerHTML = `
+            <div class="booked-card">
+              <div class="booked-info-main">
+                <div class="booked-title">
+                  <span>${b1.title}</span>
+                  <span class="tag-department">${b1.department}</span>
+                </div>
+                <div class="booked-meta">
+                  <span>👤 <strong>${b1.bookerName}</strong> (${b1.bleep})</span>
+                  <span>👥 ${b1.attendees} attendees</span>
+                  <span>🕒 ${b1.startTime} - ${b1.endTime} (${b1.durationMinutes}m)</span>
+                </div>
+              </div>
+              <div class="booked-actions-quick" style="display:flex; gap:0.4rem; align-items:center;">
+                <button class="btn-slot-action" title="Add to Outlook Calendar" onclick="event.stopPropagation(); window.SyncEngine.generateICS(window.currentClickedBooking = ${JSON.stringify(b1).replace(/"/g, '&quot;')})">
+                  📅 Outlook
+                </button>
+                ${toggleBtnHtml}
+              </div>
+            </div>
+          `;
+          contentCol.onclick = () => openDetailsModal(b1);
+        }
+      }
+      // Case 2: Both halves are free and upcoming
+      else if (!b1 && !b2 && !isPast1 && !isPast2) {
+        slotRow.classList.add("is-available");
+        contentCol.innerHTML = `
+          <div class="available-slot-card">
+            <span>✨ 1-Hour Slot Available (${hourStartStr} – ${hourEndStr})</span>
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+              ${toggleBtnHtml}
+              <span class="badge-book-now">+ Book Hour</span>
+            </div>
+          </div>
+        `;
+        contentCol.onclick = () => openBookingModal(dateStr, hourStartStr, 60);
+      }
+      // Case 3: Both halves are past and unbooked
+      else if (!b1 && !b2 && isPast1 && isPast2) {
+        slotRow.classList.add("is-past");
+        contentCol.innerHTML = `
+          <div class="past-slot-card" style="justify-content:space-between; width:100%;">
+            <span>⌛ Concluded Hour (${hourStartStr} – ${hourEndStr})</span>
+            ${toggleBtnHtml}
+          </div>
+        `;
+        contentCol.onclick = () => {
+          alert("This time slot has already concluded. Please choose an upcoming slot to book.");
+        };
+      }
+      // Case 4: Partial / Mixed hour (e.g., 14:00 passed & 14:30 free, or half booked & half free)
+      else {
+        const part1Label = b1 ? `🔒 ${b1.title}` : (isPast1 ? `${hourStartStr} Passed` : `${hourStartStr} Free`);
+        const part2Label = b2 ? `🔒 ${b2.title}` : (isPast2 ? `${halfStartStr} Passed` : `${halfStartStr} Free`);
+        const freeSlotTime = (!b1 && !isPast1) ? hourStartStr : ((!b2 && !isPast2) ? halfStartStr : null);
+
+        if (freeSlotTime) {
+          slotRow.classList.add("is-available");
+          contentCol.innerHTML = `
+            <div class="available-slot-card">
+              <span>⚡ Partial Hour: <strong>${part1Label}</strong> • <strong>${part2Label}</strong></span>
+              <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                ${toggleBtnHtml}
+                <span class="badge-book-now">+ Book ${freeSlotTime}</span>
+              </div>
+            </div>
+          `;
+          contentCol.onclick = () => openBookingModal(dateStr, freeSlotTime, 30);
+        } else {
+          slotRow.classList.add(isPast1 && isPast2 ? "is-past" : "is-booked");
+          contentCol.innerHTML = `
+            <div class="past-slot-card" style="justify-content:space-between; width:100%;">
+              <span>📋 ${part1Label} • ${part2Label}</span>
+              ${toggleBtnHtml}
+            </div>
+          `;
+          contentCol.onclick = () => {
+            state.expandedHours[expandKey] = true;
+            renderDayTimeline();
+          };
+        }
+      }
+
+      const expandBtn = contentCol.querySelector(".btn-expand-half-hours");
+      if (expandBtn) {
+        expandBtn.onclick = (e) => {
+          e.stopPropagation();
+          state.expandedHours[expandKey] = true;
+          renderDayTimeline();
+        };
       }
 
       slotRow.appendChild(contentCol);
       timelineWrapper.appendChild(slotRow);
     }
 
+    // Separate passed hours vs upcoming/current hours
+    const pastHours = [];
+    const upcomingHours = [];
+    for (let h = openH; h < closeH; h++) {
+      const hourEndMins = (h + 1) * 60;
+      const isHourCompletelyPast = isToday ? (hourEndMins <= nowMinutes) : isPastDate;
+      if (isHourCompletelyPast) {
+        pastHours.push(h);
+      } else {
+        upcomingHours.push(h);
+      }
+    }
+
+    // Collapsible toggle bar for passed hours
+    if (pastHours.length > 0) {
+      const firstPastStr = window.SyncEngine.minutesToTime(pastHours[0] * 60);
+      const lastPastEndStr = window.SyncEngine.minutesToTime((pastHours[pastHours.length - 1] + 1) * 60);
+      const toggleBar = document.createElement("div");
+      toggleBar.className = "past-slots-toggle-bar";
+      toggleBar.innerHTML = `
+        <span>⌛ ${state.showPastSlots ? "Showing" : "Hidden"} ${pastHours.length} earlier ${pastHours.length === 1 ? "hour" : "hours"} (${firstPastStr} – ${lastPastEndStr})</span>
+        <button type="button" class="past-slots-toggle-btn">${state.showPastSlots ? "Hide Earlier Times ▴" : "Show Earlier Times ▾"}</button>
+      `;
+      toggleBar.onclick = () => {
+        state.showPastSlots = !state.showPastSlots;
+        renderDayTimeline();
+      };
+      timelineWrapper.appendChild(toggleBar);
+
+      if (state.showPastSlots) {
+        pastHours.forEach(h => appendHourBlock(h));
+      }
+    }
+
+    upcomingHours.forEach(h => appendHourBlock(h));
+
     container.appendChild(timelineWrapper);
   }
-
   // Render Week View
   function renderWeekView() {
     const container = elements.weekViewContainer;
@@ -575,7 +775,7 @@
       const header = document.createElement("div");
       header.className = "agenda-day-header";
       header.innerHTML = `
-        <span>?? ${dateTitle}</span>
+        <span>📅 ${dateTitle}</span>
         <span style="font-size:0.75rem; font-weight:600; opacity:0.8;">${grouped[dateStr].length} session(s)</span>
       `;
       groupCard.appendChild(header);
@@ -586,10 +786,10 @@
         item.innerHTML = `
           <div>
             <div style="font-weight:700; color:var(--nhs-dark-blue); font-size:0.92rem;">
-              ${b.isBlocked ? '?? ' : ''}${b.title}
+              ${b.isBlocked ? '🔒 ' : ''}${b.title}
             </div>
             <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem;">
-              ?? ${b.bookerName} (${b.department}) � ?? ${b.bleep} � ?? ${b.attendees} attendees
+              👤 ${b.bookerName} (${b.department}) • 📟 ${b.bleep} • 👥 ${b.attendees} attendees
             </div>
           </div>
           <div style="text-align:right;">
@@ -639,7 +839,7 @@
     const isAdmin = window.SyncEngine.isAdmin;
     elements.adminActiveBar.style.display = isAdmin ? "flex" : "none";
     elements.adminToggleBtn.classList.toggle("admin-active", isAdmin);
-    elements.adminToggleBtn.innerHTML = isAdmin ? "??? Superuser Active" : "?? Admin";
+    elements.adminToggleBtn.innerHTML = isAdmin ? "🛡️ Superuser Active" : "🔐 Admin";
   }
 
   // Booking Modal Logic
@@ -1031,7 +1231,7 @@
     }
     renderDoorQrCode(qrUrl);
   }
-  function openBookingModal(dateStr, startTime) {
+  function openBookingModal(dateStr, startTime, defaultDuration = 30) {
     state.editingBookingId = null;
     state.recurrence = null;
     elements.bookingForm.reset();
@@ -1058,7 +1258,7 @@
       chosenStartTime = state.activeSlotStart || window.SyncEngine.minutesToTime(Math.ceil(nowMins / 30) * 30);
     }
     elements.bookingStartTimeInput.value = chosenStartTime;
-    setBookingDuration(30);
+    setBookingDuration(defaultDuration);
 
     if (elements.recurrenceSummaryText) {
       elements.recurrenceSummaryText.textContent = "One-off booking (Does not repeat)";
@@ -1091,7 +1291,7 @@
     const d = new Date(parts[0], parts[1] - 1, parts[2]);
     const dayName = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
     if (elements.checkerHeaderTitle) {
-      elements.checkerHeaderTitle.textContent = `?? Room Availability for ${dayName}`;
+      elements.checkerHeaderTitle.textContent = `📅 Room Availability for ${dayName}`;
     }
 
     // Get existing bookings for this date
@@ -1163,7 +1363,7 @@
       } else {
         elements.checkerConflictMsg.style.display = "block";
         elements.checkerConflictMsg.className = "checker-conflict-message is-free";
-        elements.checkerConflictMsg.innerHTML = `? <strong>Available:</strong> ${chosenStart} � ${chosenEnd} (${chosenDuration} mins) is currently free to book!`;
+        elements.checkerConflictMsg.innerHTML = `✅ <strong>Available:</strong> ${chosenStart} • ${chosenEnd} (${chosenDuration} mins) is currently free to book!`;
       }
     }
   }
@@ -1311,7 +1511,7 @@
     };
 
     if (elements.recurrenceSummaryText) {
-      elements.recurrenceSummaryText.innerHTML = `?? <strong>${summaryText}</strong> (${dates.length} sessions planned)`;
+      elements.recurrenceSummaryText.innerHTML = `🔄 <strong>${summaryText}</strong> (${dates.length} sessions planned)`;
     }
     elements.recurrenceModal.classList.remove("open");
     updateLiveAvailabilityPreview();
@@ -1427,14 +1627,14 @@
 
         if (conflictCheck.hasConflicts) {
           if (conflictCheck.freeDates.length === 0) {
-            alert(`?? Cannot create recurring series:\nAll ${dates.length} requested sessions conflict with existing bookings.`);
+            alert(`⚠️ Cannot create recurring series:\nAll ${dates.length} requested sessions conflict with existing bookings.`);
             return;
           }
 
-          const conflictLines = conflictCheck.conflicts.map(c => `� ${c.date}: ${c.message}`).slice(0, 5).join("\n");
+          const conflictLines = conflictCheck.conflicts.map(c => `• ${c.date}: ${c.message}`).slice(0, 5).join("\n");
           const moreText = conflictCheck.conflicts.length > 5 ? `\n...and ${conflictCheck.conflicts.length - 5} more` : "";
           const proceed = confirm(
-            `?? Scheduling Conflict on ${conflictCheck.conflicts.length} of ${dates.length} sessions:\n\n` +
+            `⚠️ Scheduling Conflict on ${conflictCheck.conflicts.length} of ${dates.length} sessions:\n\n` +
             `${conflictLines}${moreText}\n\n` +
             `Would you like to book the ${conflictCheck.freeDates.length} AVAILABLE sessions (skipping conflicting dates)?`
           );
@@ -1447,7 +1647,7 @@
         closeAllModals();
 
         const downloadIcs = confirm(
-          `? Recurring Booking Series Confirmed!\n\n` +
+          `✅ Recurring Booking Series Confirmed!\n\n` +
           `Series: ${state.recurrence.summary}\n` +
           `Total Sessions Booked: ${result.bookings.length}\n` +
           `Time: ${startTime} - ${endTime}\n\n` +
@@ -1466,7 +1666,7 @@
 
       // Prompt Outlook .ics download immediately
       const downloadIcs = confirm(
-        `? Seminar Room Booked Successfully!\n\n` +
+        `✅ Seminar Room Booked Successfully!\n\n` +
         `Date: ${newBooking.date}\n` +
         `Time: ${newBooking.startTime} - ${newBooking.endTime}\n` +
         `Booking Ref: ${newBooking.id}\n\n` +
@@ -1477,7 +1677,7 @@
       }
       renderCurrentView();
     } catch (err) {
-      alert("?? Booking Error: " + err.message);
+      alert("⚠️ Booking Error: " + err.message);
     }
   }
 
@@ -1492,7 +1692,7 @@
 
     const recurrenceBadge = booking.isRecurring
       ? `<div style="background:#EFF6FF; border:1px solid #BFDBFE; color:#1E40AF; padding:0.4rem 0.6rem; border-radius:4px; font-size:0.8rem; margin-top:0.5rem;">
-          ?? <strong>Recurring Series:</strong> ${booking.recurrenceSummary || 'Periodic Session'} (Session ${booking.occurrenceIndex || 1} of ${booking.totalOccurrences || 1})
+          🔄 <strong>Recurring Series:</strong> ${booking.recurrenceSummary || 'Periodic Session'} (Session ${booking.occurrenceIndex || 1} of ${booking.totalOccurrences || 1})
          </div>`
       : "";
 
@@ -1500,7 +1700,7 @@
       <div style="background:var(--bg-surface-subtle); padding:1rem; border-radius:var(--radius-sm); border-left:4px solid var(--nhs-blue);">
         <h4 style="margin:0; font-size:1.1rem; color:var(--nhs-dark-blue);">${booking.title}</h4>
         <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">
-          ?? <strong>${booking.date}</strong> &nbsp;�&nbsp; ?? <strong>${booking.startTime} - ${booking.endTime}</strong> (${booking.durationMinutes} mins)
+          📅 <strong>${booking.date}</strong> &nbsp;•&nbsp; 🕒 <strong>${booking.startTime} - ${booking.endTime}</strong> (${booking.durationMinutes} mins)
         </div>
         ${recurrenceBadge}
       </div>
@@ -1564,7 +1764,7 @@
 
   function refreshSoundButton() {
     if (elements.lockoutSoundBtn) {
-      elements.lockoutSoundBtn.textContent = soundEnabled() ? "?? Sound on" : "?? Sound off";
+      elements.lockoutSoundBtn.textContent = soundEnabled() ? "🔊 Sound on" : "🔇 Sound off";
     }
   }
 
@@ -1679,8 +1879,8 @@
     if (booking.isRecurring && booking.recurrenceGroupId) {
       const cancelAll = confirm(
         `This booking is part of a recurring series:\n"${booking.recurrenceSummary}"\n\n` +
-        `� Click OK to cancel the ENTIRE RECURRING SERIES (${booking.totalOccurrences || ''} sessions).\n` +
-        `� Click CANCEL to cancel ONLY THIS SINGLE SESSION on ${booking.date}.`
+        `• Click OK to cancel the ENTIRE RECURRING SERIES (${booking.totalOccurrences || ''} sessions).\n` +
+        `• Click CANCEL to cancel ONLY THIS SINGLE SESSION on ${booking.date}.`
       );
 
       try {
@@ -1694,7 +1894,7 @@
         closeAllModals();
         renderCurrentView();
       } catch (err) {
-        alert("?? Error: " + err.message);
+        alert("⚠️ Error: " + err.message);
       }
       return;
     }
@@ -1709,7 +1909,7 @@
       closeAllModals();
       renderCurrentView();
     } catch (err) {
-      alert("?? Error: " + err.message);
+      alert("⚠️ Error: " + err.message);
     }
   }
 
@@ -1838,7 +2038,7 @@
       } else {
         if (elements.cancelPinError) {
           elements.cancelPinError.style.display = "block";
-          elements.cancelPinError.textContent = "? Incorrect PIN (Attempt " + state.pinFailedAttempts + " of 3). Only the booker or Pharmacy Directorate Admin can modify this booking.";
+          elements.cancelPinError.textContent = "❌ Incorrect PIN (Attempt " + state.pinFailedAttempts + " of 3). Only the booker or Pharmacy Directorate Admin can modify this booking.";
         }
         if (elements.cancelSlotPin) {
           elements.cancelSlotPin.value = "";
@@ -1855,7 +2055,7 @@
       if (elements.mibAuthStatus) {
         elements.mibAuthStatus.style.display = "block";
         elements.mibAuthStatus.style.color = "#10B981";
-        elements.mibAuthStatus.textContent = "? Directorate Admin Authorization Confirmed. Releasing slot...";
+        elements.mibAuthStatus.textContent = "✅ Directorate Admin Authorization Confirmed. Releasing slot...";
       }
       setTimeout(() => {
         if (elements.mibModal) elements.mibModal.classList.remove("open");
@@ -1872,7 +2072,7 @@
       if (elements.mibAuthStatus) {
         elements.mibAuthStatus.style.display = "block";
         elements.mibAuthStatus.style.color = "#FF4444";
-        elements.mibAuthStatus.textContent = "? Invalid Directorate Admin Password. Access Denied.";
+        elements.mibAuthStatus.textContent = "❌ Invalid Directorate Admin Password. Access Denied.";
       }
       if (elements.mibAdminPassword) {
         elements.mibAdminPassword.value = "";
@@ -1924,11 +2124,11 @@
   function handleAdminLogin() {
     const pin = elements.adminPinInput.value.trim();
     if (window.SyncEngine.verifyAdminPin(pin)) {
-      alert("? Admin Superuser Mode Activated!\nYou can now edit, cancel, or block any room slot.");
+      alert("✅ Admin Superuser Mode Activated!\nYou can now edit, cancel, or block any room slot.");
       closeAllModals();
       renderCurrentView();
     } else {
-      alert("? Incorrect Admin PIN. Please check with the Pharmacy IT lead.");
+      alert("❌ Incorrect Admin PIN. Please check with the Pharmacy IT lead.");
     }
   }
 
@@ -1956,7 +2156,7 @@
     users.forEach(u => {
       const opt = document.createElement("option");
       opt.value = u.name;
-      opt.textContent = u.name + (u.department ? " � " + u.department : "") + (u.bleep ? " (" + u.bleep + ")" : "");
+      opt.textContent = u.name + (u.department ? " • " + u.department : "") + (u.bleep ? " (" + u.bleep + ")" : "");
       elements.staffSuggestions.appendChild(opt);
     });
   }
@@ -1982,7 +2182,7 @@
       // Do not auto-fill PIN for security - booker must enter their own secret PIN
       if (elements.staffMatchBadge) {
         elements.staffMatchBadge.style.display = "inline";
-        elements.staffMatchBadge.textContent = "? Recognized: " + matched.name + " (" + matched.department + ")";
+        elements.staffMatchBadge.textContent = "✅ Recognized: " + matched.name + " (" + matched.department + ")";
       }
     } else {
       if (elements.staffMatchBadge) elements.staffMatchBadge.style.display = "none";
@@ -2001,9 +2201,9 @@
     elements.adminAddUserForm.reset();
     if (elements.editUserId) elements.editUserId.value = "";
     if (elements.btnCancelEditUser) elements.btnCancelEditUser.style.display = "none";
-    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "? Save Staff Member";
+    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "💾 Save Staff Member";
     const title = document.getElementById("user-form-title");
-    if (title) title.textContent = "? Add Staff Member";
+    if (title) title.textContent = "➕ Add Staff Member";
   }
 
   function renderAdminUsersList(searchFilter = "") {
@@ -2040,12 +2240,12 @@
       tr.innerHTML = 
         '<td style="padding: 8px 10px; font-weight: 600;">' + (u.name || '') + '</td>' +
         '<td style="padding: 8px 10px; color: var(--text-muted); font-family: monospace;">' + (u.email || '') + '</td>' +
-        '<td style="padding: 8px 10px;">' + (u.bleep || '�') + '</td>' +
+        '<td style="padding: 8px 10px;">' + (u.bleep || '—') + '</td>' +
         '<td style="padding: 8px 10px;">' + (u.department || 'Clinical Pharmacy') + '</td>' +
         '<td style="padding: 8px 10px;">' + roleBadge + '</td>' +
         '<td style="padding: 8px 10px; text-align: center;">' +
-          '<button class="btn-secondary btn-sm btn-edit-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; margin-right: 4px;">?? Edit</button>' +
-          '<button class="btn-secondary btn-sm btn-delete-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; color: #dc2626;">???</button>' +
+          '<button class="btn-secondary btn-sm btn-edit-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; margin-right: 4px;">✏️ Edit</button>' +
+          '<button class="btn-secondary btn-sm btn-delete-user" data-id="' + u.id + '" style="padding: 2px 6px; font-size: 0.75rem; color: #dc2626;">🗑️</button>' +
         '</td>';
       elements.adminUsersTableBody.appendChild(tr);
     });
@@ -2072,9 +2272,9 @@
     if (elements.userFormPin) elements.userFormPin.value = user.pin || "1234";
 
     if (elements.btnCancelEditUser) elements.btnCancelEditUser.style.display = "inline-block";
-    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "?? Update Staff Member";
+    if (elements.btnSaveUserSubmit) elements.btnSaveUserSubmit.textContent = "💾 Update Staff Member";
     const title = document.getElementById("user-form-title");
-    if (title) title.textContent = "?? Edit Staff Member";
+    if (title) title.textContent = "✏️ Edit Staff Member";
   }
 
   function deleteStaffMember(userId) {
@@ -2298,7 +2498,7 @@
       elements.btnCopyDoorUrl.onclick = () => {
         const url = elements.doorQrUrlInput ? elements.doorQrUrlInput.value : window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-          alert("?? Link copied to clipboard:\n" + url);
+          alert("🔗 Link copied to clipboard:\n" + url);
         }).catch(() => {
           prompt("Copy this URL for door sign / phone access:", url);
         });
@@ -2347,7 +2547,7 @@
         closeAllModals();
         renderCurrentView();
       } catch (err) {
-        alert("?? Error: " + err.message);
+        alert("⚠️ Error: " + err.message);
       }
     };
 
@@ -2373,10 +2573,10 @@
         const key = elements.supabaseAnonKeyInput.value.trim();
         const res = await window.SyncEngine.testSupabaseConnection(url, key);
         if (res.success) {
-          elements.supabaseTestStatus.textContent = "?? Connected! Found " + res.roomsCount + " rooms, " + res.usersCount + " staff, " + res.bookingsCount + " bookings.";
+          elements.supabaseTestStatus.textContent = "✅ Connected! Found " + res.roomsCount + " rooms, " + res.usersCount + " staff, " + res.bookingsCount + " bookings.";
           elements.supabaseTestStatus.style.color = "#007f3b";
         } else {
-          elements.supabaseTestStatus.textContent = "?? " + res.error;
+          elements.supabaseTestStatus.textContent = "❌ " + res.error;
           elements.supabaseTestStatus.style.color = "#da291c";
         }
       };
@@ -2393,7 +2593,7 @@
         cloudSyncUrl: restUrl
       });
 
-      alert("? Cloud database settings saved!\nReal-time synchronization is now active.");
+      alert("✅ Cloud database settings saved!\nReal-time synchronization is now active.");
       closeAllModals();
       updateSyncStatusBadge();
     };
@@ -2452,11 +2652,11 @@
               const csvText = XLSX.utils.sheet_to_csv(worksheet);
 
               const count = window.SyncEngine.importUsersFromCsv(csvText);
-              alert("? Successfully imported " + count + " staff members directly from '" + file.name + "' (Sheet: " + sheetName + ")!");
+              alert("✅ Successfully imported " + count + " staff members directly from '" + file.name + "' (Sheet: " + sheetName + ")!");
               renderAdminUsersList();
               updateStaffSuggestions();
             } catch (err) {
-              alert("?? Excel Import Error: " + err.message);
+              alert("❌ Excel Import Error: " + err.message);
             }
             elements.userCsvFileInput.value = "";
           };
@@ -2467,11 +2667,11 @@
           reader.onload = (evt) => {
             try {
               const count = window.SyncEngine.importUsersFromCsv(evt.target.result);
-              alert("? Successfully imported " + count + " staff members from '" + file.name + "'!");
+              alert("✅ Successfully imported " + count + " staff members from '" + file.name + "'!");
               renderAdminUsersList();
               updateStaffSuggestions();
             } catch (err) {
-              alert("?? CSV Import Error: " + err.message);
+              alert("❌ CSV Import Error: " + err.message);
             }
             elements.userCsvFileInput.value = "";
           };
@@ -2505,7 +2705,7 @@
           renderAdminUsersList();
           updateStaffSuggestions();
         } catch (err) {
-          alert("?? Error: " + err.message);
+          alert("⚠️ Error: " + err.message);
         }
       };
     }
@@ -2521,7 +2721,7 @@
           }
           deferredInstallPrompt = null;
         } else {
-          alert("To install this app on your phone:\n� iPhone (Safari): Tap the Share button, then 'Add to Home Screen'\n� Android (Chrome): Tap the menu (?), then 'Install app' or 'Add to Home screen'");
+          alert("To install this app on your phone:\n• iPhone (Safari): Tap the Share button, then 'Add to Home Screen'\n• Android (Chrome): Tap the menu (⋮), then 'Install app' or 'Add to Home screen'");
         }
       };
     }
