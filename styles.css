@@ -2298,3 +2298,129 @@ body {
 [data-theme="dark"] #admin-users-table-container table tbody tr:hover {
   background: #1E293B;
 }
+
+/* ==========================================================================
+   Low-Resolution & Small-Screen Responsiveness
+   ========================================================================== */
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+@media (max-width: 1024px) {
+  .week-view-container,
+  #week-view-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .week-grid-container {
+    min-width: 680px;
+  }
+  .controls-bar {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+  .room-switcher-bar {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .nhs-header-inner {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+  }
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .app-container,
+  main.main-content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-bottom: 5.5rem;
+  }
+  .date-navigator {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .view-switcher,
+  .filter-group {
+    width: 100%;
+  }
+  .site-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nhs-header-title {
+    font-size: 0.95rem;
+  }
+  .nhs-header-subtitle {
+    font-size: 0.72rem;
+  }
+  .slot-time-col {
+    flex: 0 0 64px;
+    width: 64px;
+    min-width: 64px;
+    padding: 0.5rem 0.3rem;
+    font-size: 0.78rem;
+  }
+  .available-slot-card,
+  .booked-card,
+  .past-slots-toggle-bar,
+  .hour-group-header {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0.55rem 0.65rem;
+  }
+  .booked-meta {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .modal-card {
+    max-height: 94vh;
+    width: calc(100vw - 1rem);
+    border-radius: var(--radius-md);
+  }
+  .modal-body {
+    padding: 0.9rem;
+  }
+  .modal-footer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+  }
+  .btn-primary,
+  .btn-secondary {
+    font-size: 0.82rem;
+    padding: 0.45rem 0.75rem;
+  }
+}
+
+@media (max-height: 750px) {
+  .room-status-hero {
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.85rem;
+  }
+  .modal-header {
+    padding: 0.8rem 1.1rem;
+  }
+  .modal-body {
+    padding: 0.95rem 1.1rem;
+  }
+  .form-group {
+    margin-bottom: 0.7rem;
+  }
+}
