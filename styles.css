@@ -10,6 +10,8 @@
   --nhs-bright-blue: #0072CE;
   --nhs-light-blue: #41B6E6;
   --nhs-aqua: #00A9CE;
+  --text-nhs-blue: #005EB8;
+  --text-nhs-dark: #003087;
   
   /* Status Colors */
   --status-available: #007F3B;
@@ -79,6 +81,8 @@
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
   --text-light: #64748B;
+  --text-nhs-blue: #60A5FA;
+  --text-nhs-dark: #93C5FD;
 
   --status-available-bg: rgba(0, 127, 59, 0.18);
   --status-available-border: rgba(0, 127, 59, 0.4);
@@ -431,8 +435,8 @@ body {
 
 .btn-secondary:hover {
   background: var(--bg-surface-subtle);
-  border-color: var(--nhs-blue);
-  color: var(--nhs-blue);
+  border-color: var(--text-nhs-blue);
+  color: var(--text-nhs-blue);
 }
 
 /* ==========================================================================
@@ -497,7 +501,7 @@ body {
 .btn-icon:hover {
   background: var(--nhs-blue);
   color: #FFF;
-  border-color: var(--nhs-blue);
+  border-color: var(--text-nhs-blue);
 }
 
 .date-display-title {
@@ -524,7 +528,7 @@ body {
 .btn-today:hover {
   background: var(--nhs-blue);
   color: #FFF;
-  border-color: var(--nhs-blue);
+  border-color: var(--text-nhs-blue);
 }
 
 .view-tabs {
@@ -553,7 +557,7 @@ body {
 
 .tab-btn.active {
   background: var(--bg-surface);
-  color: var(--nhs-blue);
+  color: var(--text-nhs-blue);
   box-shadow: var(--shadow-sm);
 }
 
@@ -770,8 +774,8 @@ body {
 }
 .past-slots-toggle-btn {
   background: var(--bg-surface, #ffffff);
-  color: var(--nhs-blue);
-  border: 1px solid var(--nhs-blue);
+  color: var(--text-nhs-blue);
+  border: 1px solid var(--text-nhs-blue);
   border-radius: 999px;
   padding: 0.25rem 0.75rem;
   font-size: 0.78rem;
@@ -788,7 +792,7 @@ body {
   border-bottom: 1px solid var(--border-subtle);
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--nhs-dark-blue, #003087);
+  color: var(--text-nhs-dark);
   cursor: pointer;
 }
 .slot-time-col.is-expandable-time {
@@ -804,8 +808,8 @@ body {
 }
 .btn-expand-half-hours {
   background: rgba(0, 94, 184, 0.08);
-  color: var(--nhs-blue);
-  border: 1px solid rgba(0, 94, 184, 0.25);
+  color: var(--text-nhs-blue);
+  border: 1px solid rgba(96, 165, 250, 0.35);
   border-radius: 999px;
   padding: 0.22rem 0.65rem;
   font-size: 0.74rem;
@@ -860,7 +864,7 @@ body {
 .booked-title {
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -907,7 +911,7 @@ body {
 .btn-slot-action:hover {
   background: var(--nhs-blue);
   color: #FFF;
-  border-color: var(--nhs-blue);
+  border-color: var(--text-nhs-blue);
 }
 
 /* Slot State: Admin Blocked */
@@ -951,8 +955,8 @@ body {
 
 .week-header-cell.is-today {
   background: var(--status-booked-bg);
-  color: var(--nhs-blue);
-  border-bottom-color: var(--nhs-blue);
+  color: var(--text-nhs-blue);
+  border-bottom-color: var(--text-nhs-blue);
 }
 
 .week-time-cell {
@@ -987,7 +991,7 @@ body {
 .week-slot-badge {
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1017,7 +1021,7 @@ body {
   border-bottom: 1px solid var(--border-subtle);
   font-weight: 700;
   font-size: 0.88rem;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1174,7 +1178,7 @@ body {
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--nhs-blue);
+  border-color: var(--text-nhs-blue);
   box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.2);
 }
 
@@ -1207,7 +1211,7 @@ body {
 .duration-btn.active {
   background: var(--nhs-blue);
   color: #FFF;
-  border-color: var(--nhs-blue);
+  border-color: var(--text-nhs-blue);
   box-shadow: 0 2px 6px rgba(0, 94, 184, 0.25);
 }
 
@@ -1233,7 +1237,7 @@ body {
 }
 
 .checkbox-label input {
-  accent-color: var(--nhs-blue);
+  accent-color: var(--text-nhs-blue);
   width: 16px;
   height: 16px;
 }
@@ -1267,7 +1271,7 @@ body {
 .door-sign-title {
   font-size: 1.65rem;
   font-weight: 900;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   text-transform: uppercase;
   letter-spacing: -0.5px;
   margin-top: 0.5rem;
@@ -1302,7 +1306,7 @@ body {
   padding: 0.85rem;
   border-radius: var(--radius-sm);
   font-size: 0.88rem;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   font-weight: 600;
   margin-top: 1rem;
 }
@@ -1344,7 +1348,7 @@ body {
   }
 
   .mobile-nav-item.active {
-    color: var(--nhs-blue);
+    color: var(--text-nhs-blue);
   }
 
   .room-status-hero {
@@ -1391,7 +1395,7 @@ body {
 }
 
 .calendar-date-selector:focus {
-  border-color: var(--nhs-blue);
+  border-color: var(--text-nhs-blue);
   box-shadow: 0 0 0 2px rgba(0, 94, 184, 0.15);
 }
 
@@ -1413,7 +1417,7 @@ body {
   margin-bottom: 0.6rem;
   font-size: 0.84rem;
   font-weight: 700;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
 }
 
 .badge-slot-count {
@@ -1460,7 +1464,7 @@ body {
 .slot-pill.free.selected {
   background: var(--nhs-blue);
   color: #FFFFFF;
-  border-color: var(--nhs-dark-blue);
+  border-color: var(--text-nhs-dark);
   box-shadow: 0 0 0 2px rgba(0, 94, 184, 0.25);
 }
 
@@ -2012,7 +2016,7 @@ body {
 .site-selector-badge {
   font-size: 0.82rem;
   font-weight: 800;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   letter-spacing: 0.3px;
   text-transform: uppercase;
 }
@@ -2049,12 +2053,12 @@ body {
 .site-tab-pill:hover {
   background: var(--status-booked-bg);
   border-color: var(--nhs-bright-blue);
-  color: var(--nhs-blue);
+  color: var(--text-nhs-blue);
 }
 
 .site-tab-pill.active {
   background: var(--nhs-blue);
-  border-color: var(--nhs-dark-blue);
+  border-color: var(--text-nhs-dark);
   color: #FFFFFF;
   box-shadow: 0 2px 6px rgba(0, 94, 184, 0.25);
 }
@@ -2110,7 +2114,7 @@ body {
   border: 1.5px solid var(--nhs-blue);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   cursor: pointer;
   outline: none;
   min-width: 220px;
@@ -2141,7 +2145,7 @@ body {
   padding: 0.15rem 0.5rem;
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
   background: #E0F2FE;
   border: 1px solid #BAE6FD;
   border-radius: var(--radius-full);
@@ -2180,7 +2184,7 @@ body {
 .admin-room-form-header h4 {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--nhs-dark-blue);
+  color: var(--text-nhs-dark);
 }
 
 .equipment-grid-compact {
